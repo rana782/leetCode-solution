@@ -1,12 +1,6 @@
-// LeetCode: Maximum Product Difference Between Two Pairs (maximum-product-difference-between-two-pairs)
-// Submission ID: 963602916
-// Language: java
-// Timestamp (UTC): 2023-06-04T10:10:38Z
+# Placeholder for Maximum Product Difference Between Two Pairs (maximum-product-difference-between-two-pairs)
 
-class Solution {
-    public int maxProductDifference(int[] nums) {
-        Arrays.sort(nums);
-        int max = (nums[nums.length-1]*nums[nums.length-2])-(nums[0]*nums[1]);
-        return max;
-    }
-}
+- **Submission ID:** 963602916
+- **Original solve time (UTC):** 2023-06-04T10:10:38Z
+- **Note:** LeetCode API did not return code for this submission.
+  This placeholder ensures a backdated commit for your contribution graph.
