@@ -1,45 +1,6 @@
-// LeetCode: Number of Enclaves (number-of-enclaves)
-// Submission ID: 1470768868
-// Language: java
-// Timestamp (UTC): 2024-12-05T06:14:36Z
+# Placeholder for Number of Enclaves (number-of-enclaves)
 
-class Solution {
-   	   public int numEnclaves(int[][] grid) {
-	     
-	     
-	        for(int i = 0; i<grid.length; i++) {
-	        	for(int j = 0; j<grid[0].length; j++) {
-	        		if( i == 0 || j == 0 || i == grid.length-1 || j == grid[0].length-1) {
-	        			if(grid[i][j] == 1) {
-	        				
-							solve(grid,i,j);
-	        			}
-	        		}
-	        	}
-	        }
-	        
-	        int count = 0;
-	        
-	        for(int i = 0; i<grid.length; i++) {
-	        	for(int j = 0; j<grid[0].length; j++) {
-	        		if(grid[i][j] == 1) {
-	        			count++;
-	        		}
-	        	}
-	        }
-	        
-	        return count;
-	    }
-
-	private static void solve(int[][] grid, int i, int j) {
-		if(i<0 || j<0 || i>=grid.length || j>=grid[0].length || grid[i][j] == 0 ) {
-			return;
-		}
-		grid[i][j] = 0;
-		solve(grid,  i+1, j);
-		solve(grid, i-1, j);
-		solve(grid,i, j+1);
-		solve(grid, i, j-1);
-		
-	}
-}
+- **Submission ID:** 1470768868
+- **Original solve time (UTC):** 2024-12-05T06:14:36Z
+- **Note:** LeetCode API did not return code for this submission.
+  This placeholder ensures a backdated commit for your contribution graph.

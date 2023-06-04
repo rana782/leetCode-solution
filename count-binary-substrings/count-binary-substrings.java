@@ -1,25 +1,6 @@
-// LeetCode: Count Binary Substrings (count-binary-substrings)
-// Submission ID: 1521873924
-// Language: java
-// Timestamp (UTC): 2025-01-27T07:30:38Z
+# Placeholder for Count Binary Substrings (count-binary-substrings)
 
-class Solution {
-    public int countBinarySubstrings(String s) {
-        int count = 0;
-        int curr = 1;
-         int prev =0;
-
-         for(int i = 1; i<s.length(); i++){
-            if(s.charAt(i)!=s.charAt(i-1)){
-                count+=Math.min(curr,prev);
-                prev = curr;
-                curr = 1;
-            }
-            else{
-                curr++;
-            }
-    }
-
-    return count+=Math.min(curr,prev);
-    }
-}
+- **Submission ID:** 1521873924
+- **Original solve time (UTC):** 2025-01-27T07:30:38Z
+- **Note:** LeetCode API did not return code for this submission.
+  This placeholder ensures a backdated commit for your contribution graph.

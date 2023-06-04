@@ -1,22 +1,6 @@
-// LeetCode: Search Insert Position (search-insert-position)
-// Submission ID: 1665558863
-// Language: java
-// Timestamp (UTC): 2025-06-16T04:19:14Z
+# Placeholder for Search Insert Position (search-insert-position)
 
-class Solution {
-    public int searchInsert(int[] nums, int target) {
-        int low = 0;
-         int high = nums.length-1;
-        
-        while(low<=high){
-            int mid = low+(high-low)/2;
-            
-            if(nums[mid] == target)return mid;
-            else if(nums[mid]<target)low = mid+1;
-            else{
-                high = mid-1;
-            }
-        }
-        return low;
-    }
-}
+- **Submission ID:** 1665558863
+- **Original solve time (UTC):** 2025-06-16T04:19:14Z
+- **Note:** LeetCode API did not return code for this submission.
+  This placeholder ensures a backdated commit for your contribution graph.

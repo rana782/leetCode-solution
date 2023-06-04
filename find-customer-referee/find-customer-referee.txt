@@ -1,0 +1,7 @@
+// LeetCode: Find Customer Referee (find-customer-referee)
+// Submission ID: 1634977809
+// Language: mysql
+// Timestamp (UTC): 2025-05-15T19:20:47Z
+
+# Write your MySQL query statement below
+select name from customer where referee_id!=2 or referee_id is null

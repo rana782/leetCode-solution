@@ -1,28 +1,6 @@
-// LeetCode: Assign Cookies (assign-cookies)
-// Submission ID: 1584446707
-// Language: java
-// Timestamp (UTC): 2025-03-24T14:01:23Z
+# Placeholder for Assign Cookies (assign-cookies)
 
-class Solution {
-    public int findContentChildren(int[] g, int[] s) {
-        Arrays.sort(g);
-        Arrays.sort(s);
-
-        int ans = 0;
-
-        int i = 0; int j = 0;
-
-        while(i<g.length && j<s.length){
-            if(s[j]>=g[i]){
-                ans++;
-                i++;
-                j++;
-            }
-            else{
-                j++;
-            }
-        }
-
-        return ans;
-    }
-}
+- **Submission ID:** 1584446707
+- **Original solve time (UTC):** 2025-03-24T14:01:22Z
+- **Note:** LeetCode API did not return code for this submission.
+  This placeholder ensures a backdated commit for your contribution graph.

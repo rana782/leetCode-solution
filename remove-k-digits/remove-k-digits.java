@@ -1,46 +1,6 @@
-// LeetCode: Remove K Digits (remove-k-digits)
-// Submission ID: 1649930408
-// Language: java
-// Timestamp (UTC): 2025-05-31T17:04:23Z
+# Placeholder for Remove K Digits (remove-k-digits)
 
-class Solution {
-    public String removeKdigits(String num, int k) {
-        
-        if(k == num.length())return "0";
-        
-        Stack<Integer>st = new Stack<>();
-        
-        for(int i = 0; i<num.length(); i++){
-            int currNum = num.charAt(i)-'0';
-            
-            while(k!=0 && st.size()!=0 && st.peek()>currNum){
-                st.pop();
-                k--;
-            }
-            
-            
-            st.push(currNum);
-        }
-        
-        while(k>0){
-            st.pop();
-            k--;
-        }
-        
-       
-        
-        StringBuilder rem = new StringBuilder();
-        
-        while(st.size()!=0){
-            rem.append(st.pop());
-        }
-        
-        rem.reverse();
-        
-while(rem.length()>0 && rem.charAt(0) == '0'){
-    rem.deleteCharAt(0);
-}   
-       
-       return rem.toString().length() == 0 ? "0" : rem.toString();
-    }
-}
+- **Submission ID:** 1649930408
+- **Original solve time (UTC):** 2025-05-31T17:04:22Z
+- **Note:** LeetCode API did not return code for this submission.
+  This placeholder ensures a backdated commit for your contribution graph.

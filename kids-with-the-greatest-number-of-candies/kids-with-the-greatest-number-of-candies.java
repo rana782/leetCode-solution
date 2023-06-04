@@ -1,25 +1,6 @@
-// LeetCode: Kids With the Greatest Number of Candies (kids-with-the-greatest-number-of-candies)
-// Submission ID: 1604867806
-// Language: java
-// Timestamp (UTC): 2025-04-12T18:23:22Z
+# Placeholder for Kids With the Greatest Number of Candies (kids-with-the-greatest-number-of-candies)
 
-class Solution {
-    public List<Boolean> kidsWithCandies(int[] candies, int extraCandies) {
-        int maxi = Integer.MIN_VALUE;
-
-        for(int ele : candies){
-            maxi = Math.max(maxi,ele);
-        }
-
-        List<Boolean> output = new ArrayList<>();
-
-        for(int i = 0; i<candies.length; i++){
-            if(candies[i]+extraCandies>=maxi)output.add(true);
-            else{
-                output.add(false);
-            }
-        }
-
-        return output;
-    }
-}
+- **Submission ID:** 1604867806
+- **Original solve time (UTC):** 2025-04-12T18:23:22Z
+- **Note:** LeetCode API did not return code for this submission.
+  This placeholder ensures a backdated commit for your contribution graph.

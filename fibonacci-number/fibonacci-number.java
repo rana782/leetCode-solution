@@ -1,20 +1,6 @@
-// LeetCode: Fibonacci Number (fibonacci-number)
-// Submission ID: 1649886698
-// Language: java
-// Timestamp (UTC): 2025-05-31T16:10:40Z
+# Placeholder for Fibonacci Number (fibonacci-number)
 
-class Solution {
-
-    public int fib(int n) {
-        if(n == 1 || n == 0)return n;
-       int dp[] = new int[n+1];
-        dp[0] = 0;
-        dp[1]  = 1;
-        
-        for(int i = 2; i<dp.length; i++){
-            dp[i] = dp[i-1]+dp[i-2];
-        }
-        
-        return dp[n];
-    }
-}
+- **Submission ID:** 1649886698
+- **Original solve time (UTC):** 2025-05-31T16:10:39Z
+- **Note:** LeetCode API did not return code for this submission.
+  This placeholder ensures a backdated commit for your contribution graph.

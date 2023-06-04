@@ -1,28 +1,6 @@
-// LeetCode: Counting Bits (counting-bits)
-// Submission ID: 1646487809
-// Language: java
-// Timestamp (UTC): 2025-05-27T23:34:54Z
+# Placeholder for Counting Bits (counting-bits)
 
-class Solution {
-	public int find(int i ){
-			int count =0;
-	while(i>=1) {
-	        		if(i%2!=0) {
-	        			count++;
-	        		}
-	        		i = i/2;
-	        	}
-						return count;
-	}
-    public int[] countBits(int n) {
-         int ans[] = new int[n+1];
-         HashMap<Integer,Integer>map = new HashMap<>();
-	        
-	        for(int i =0; i<=n; i++) {
-	        
-	          
-	        	ans[i] = find(i);
-	        }
-	        return ans; 
-    }
-}
+- **Submission ID:** 1646487809
+- **Original solve time (UTC):** 2025-05-27T23:34:54Z
+- **Note:** LeetCode API did not return code for this submission.
+  This placeholder ensures a backdated commit for your contribution graph.

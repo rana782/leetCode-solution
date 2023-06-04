@@ -1,24 +1,6 @@
-// LeetCode: Base 7 (base-7)
-// Submission ID: 1654110223
-// Language: java
-// Timestamp (UTC): 2025-06-04T20:01:51Z
+# Placeholder for Base 7 (base-7)
 
-class Solution {
-    public String convertToBase7(int num) {
-        if (num == 0) return "0";
-
-        boolean isNegative = num < 0;
-        num = Math.abs(num);
-        StringBuilder sb = new StringBuilder();
-
-        while (num > 0) {
-            sb.append(num % 7);
-            num /= 7;
-        }
-
-        if (isNegative) sb.append('-');
-
-        return sb.reverse().toString();
-    }
-}
-
+- **Submission ID:** 1654110223
+- **Original solve time (UTC):** 2025-06-04T20:01:51Z
+- **Note:** LeetCode API did not return code for this submission.
+  This placeholder ensures a backdated commit for your contribution graph.

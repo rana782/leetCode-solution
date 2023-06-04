@@ -1,43 +1,6 @@
-// LeetCode: Construct String from Binary Tree (construct-string-from-binary-tree)
-// Submission ID: 1516595818
-// Language: java
-// Timestamp (UTC): 2025-01-22T07:01:23Z
+# Placeholder for Construct String from Binary Tree (construct-string-from-binary-tree)
 
-/**
- * Definition for a binary tree node.
- * public class TreeNode {
- *     int val;
- *     TreeNode left;
- *     TreeNode right;
- *     TreeNode() {}
- *     TreeNode(int val) { this.val = val; }
- *     TreeNode(int val, TreeNode left, TreeNode right) {
- *         this.val = val;
- *         this.left = left;
- *         this.right = right;
- *     }
- * }
- */
-class Solution {
-    public String tree2str(TreeNode t) {
-        StringBuilder res = new StringBuilder();
-        dfs(t, res);
-        return res.toString();
-    }
-
-    public static void dfs(TreeNode t, StringBuilder res) {
-        if (t == null)
-            return;
-        res.append(String.valueOf(t.val));
-        if (t.left == null && t.right == null)
-            return;
-        res.append('(');
-        dfs(t.left, res);
-        res.append(')');
-        if (t.right != null) {
-            res.append('(');
-            dfs(t.right, res);
-            res.append(')');
-        }
-    }
-}
+- **Submission ID:** 1516595818
+- **Original solve time (UTC):** 2025-01-22T07:01:23Z
+- **Note:** LeetCode API did not return code for this submission.
+  This placeholder ensures a backdated commit for your contribution graph.

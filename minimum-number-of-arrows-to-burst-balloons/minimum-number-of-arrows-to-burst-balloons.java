@@ -1,30 +1,6 @@
-// LeetCode: Minimum Number of Arrows to Burst Balloons (minimum-number-of-arrows-to-burst-balloons)
-// Submission ID: 1603939662
-// Language: java
-// Timestamp (UTC): 2025-04-11T18:52:37Z
+# Placeholder for Minimum Number of Arrows to Burst Balloons (minimum-number-of-arrows-to-burst-balloons)
 
-class Solution {
-    public int findMinArrowShots(int[][] points) {
-
-        if(points.length == 1) return 1;
-        Arrays.sort(points,(a,b)->Integer.compare(a[1],b[1]));
-
-        int count = 0;
-
-        int idx = 0;
-
-        while(idx<points.length){
-            int endPt = points[idx][1];
-
-            while(idx+1<points.length && points[idx+1][0]<=endPt){
-                idx++;
-            }
-            count++;
-            idx+=1;
-        }
-
-        return count;
-
-
-    }
-}
+- **Submission ID:** 1603939662
+- **Original solve time (UTC):** 2025-04-11T18:52:36Z
+- **Note:** LeetCode API did not return code for this submission.
+  This placeholder ensures a backdated commit for your contribution graph.

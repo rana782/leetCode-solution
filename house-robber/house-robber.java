@@ -1,20 +1,6 @@
-// LeetCode: House Robber (house-robber)
-// Submission ID: 1427238403
-// Language: java
-// Timestamp (UTC): 2024-10-19T11:38:30Z
+# Placeholder for House Robber (house-robber)
 
-class Solution {
-    public int rob(int[] nums) {
-        int oInc = nums[0];
-        int oExc = 0;
-
-        for(int i = 1; i<nums.length; i++){
-            int nInc = oExc+nums[i];
-            int nExc = Math.max(oInc,oExc);
-            oInc = nInc;
-            oExc = nExc;
-        }
-
-        return Math.max(oInc,oExc);
-    }
-}
+- **Submission ID:** 1427238403
+- **Original solve time (UTC):** 2024-10-19T11:38:30Z
+- **Note:** LeetCode API did not return code for this submission.
+  This placeholder ensures a backdated commit for your contribution graph.

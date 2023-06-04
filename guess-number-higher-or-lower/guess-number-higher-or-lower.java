@@ -1,35 +1,6 @@
-// LeetCode: Guess Number Higher or Lower (guess-number-higher-or-lower)
-// Submission ID: 1664252683
-// Language: java
-// Timestamp (UTC): 2025-06-14T21:34:52Z
+# Placeholder for Guess Number Higher or Lower (guess-number-higher-or-lower)
 
-/** 
- * Forward declaration of guess API.
- * @param  num   your guess
- * @return 	     -1 if num is higher than the picked number
- *			      1 if num is lower than the picked number
- *               otherwise return 0
- * int guess(int num);
- */
-
-public class Solution extends GuessGame {
-    public int guessNumber(int n) {
-        int low = 0;
-        int high = n;
-        
-        while(low<=high){
-            int mid = low+(high-low)/2;
-            
-            if(guess(mid) == 0)return mid;
-            else if(guess(mid) == -1){
-                high = mid-1;
-                
-            }
-            else{
-                low = mid+1;
-            }
-        }
-        
-        return -1;
-    }
-}
+- **Submission ID:** 1664252683
+- **Original solve time (UTC):** 2025-06-14T21:34:52Z
+- **Note:** LeetCode API did not return code for this submission.
+  This placeholder ensures a backdated commit for your contribution graph.

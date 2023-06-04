@@ -1,19 +1,6 @@
-// LeetCode: Perfect Squares (perfect-squares)
-// Submission ID: 1438156451
-// Language: java
-// Timestamp (UTC): 2024-10-30T12:06:02Z
+# Placeholder for Perfect Squares (perfect-squares)
 
-class Solution {
-    public int numSquares(int n) {
-        int[]dp=new int[n+1];
-        dp[0]=0;
-        dp[1]=1;
-        for(int i=2;i<=n;i++){
-            dp[i]=Integer.MAX_VALUE;
-            for(int j=1;j*j<=i;j++){
-                dp[i]=Math.min(dp[i],1+dp[i-j*j]);
-            }
-        }
-        return dp[n];
-    }
-}
+- **Submission ID:** 1438156451
+- **Original solve time (UTC):** 2024-10-30T12:06:02Z
+- **Note:** LeetCode API did not return code for this submission.
+  This placeholder ensures a backdated commit for your contribution graph.

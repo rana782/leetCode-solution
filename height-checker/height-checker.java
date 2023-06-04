@@ -1,23 +1,6 @@
-// LeetCode: Height Checker (height-checker)
-// Submission ID: 1668859272
-// Language: java
-// Timestamp (UTC): 2025-06-19T01:56:43Z
+# Placeholder for Height Checker (height-checker)
 
-class Solution {
-    public int heightChecker(int[] heights) {
-        int n = heights.length;
-        
-        
-        int exp[] = heights.clone();
-        
-        Arrays.sort(exp);
-        
-        int count =0;
-        
-        for(int i = 0;i<heights.length; i++){
-            if(exp[i]!=heights[i])count++;
-        }
-        
-        return count;
-    }
-}
+- **Submission ID:** 1668859272
+- **Original solve time (UTC):** 2025-06-19T01:56:43Z
+- **Note:** LeetCode API did not return code for this submission.
+  This placeholder ensures a backdated commit for your contribution graph.
