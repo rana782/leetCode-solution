@@ -1,37 +1,6 @@
-// LeetCode: Add Strings (add-strings)
-// Submission ID: 1342001022
-// Language: java
-// Timestamp (UTC): 2024-08-02T15:40:38Z
+# Placeholder for Add Strings (add-strings)
 
-class Solution {
-    public String addStrings(String num1, String num2) {
-        StringBuilder result = new StringBuilder();
-        int i = num1.length()-1;
-        int j = num2.length()-1;
-        int carry = 0;
-
-        while(i>=0 || j>=0 ||carry!=0){
-            int sum = 0;
-            if(i>=0){
-sum+=num1.charAt(i)-'0';
-                i--;
-            }
-                
-            
-if(j>=0){
-sum+=num2.charAt(j)-'0';
-                j--;
-}
-            
-                
-            
-
-            sum+=carry;
-
-            carry = sum/10;
-            result.append(sum%10);
-        }
-
-        return result.reverse().toString();
-    }
-}
+- **Submission ID:** 1342001022
+- **Original solve time (UTC):** 2024-08-02T15:40:38Z
+- **Note:** LeetCode API did not return code for this submission.
+  This placeholder ensures a backdated commit for your contribution graph.
