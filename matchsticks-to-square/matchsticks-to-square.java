@@ -1,40 +1,6 @@
-// LeetCode: Matchsticks to Square (matchsticks-to-square)
-// Submission ID: 1347287082
-// Language: java
-// Timestamp (UTC): 2024-08-07T04:15:24Z
+# Placeholder for Matchsticks to Square (matchsticks-to-square)
 
-class Solution {
-    public boolean makesquare(int[] matchsticks) {
-        
-        int total = 0;
-        
-        for (int i : matchsticks) {
-            total += i;
-        }
-        
-        if (total % 4 != 0) return false; // if we cant make 4 equals sides then theres no way to make a square
-        // sort the array and place the largest sides first. required optimization to not TLE
-        Arrays.sort(matchsticks); 
-        return match(matchsticks, matchsticks.length - 1, 0, 0, 0, 0, total / 4);
-    }
-    
-    public boolean match(int[] matchsticks, int index, int top, int bottom, int left, int right, int target) {
-        
-        if (top == target && bottom == target && left == target && right == target) return true;
-
-        if (top > target || bottom > target || left > target || right > target) return false;
-                        
-        int val = matchsticks[index];
-        
-        boolean t = match(matchsticks, index - 1, top + val, bottom, left, right, target);
-        if (t) return true;
-        boolean b = match(matchsticks, index - 1, top, bottom + val, left, right, target);
-        if (b) return true;
-        boolean l = match(matchsticks, index - 1, top, bottom, left + val, right, target);
-        if (l) return true;
-        boolean r = match(matchsticks, index - 1, top, bottom, left, right + val, target);
-        if (r) return true;
-        
-        return false;
-    }
-}
+- **Submission ID:** 1347287082
+- **Original solve time (UTC):** 2024-08-07T04:15:24Z
+- **Note:** LeetCode API did not return code for this submission.
+  This placeholder ensures a backdated commit for your contribution graph.
