@@ -1,20 +1,6 @@
-// LeetCode: Sort an Array (sort-an-array)
-// Submission ID: 1351159990
-// Language: java
-// Timestamp (UTC): 2024-08-10T16:48:12Z
+# Placeholder for Sort an Array (sort-an-array)
 
-class Solution {
-    public int[] sortArray(int[] nums) {
-         PriorityQueue<Integer> pq = new PriorityQueue<>();
-		 for(int i : nums) {
-			 pq.add(i);
-		 }
-		 
-		 int ans[] = new int[nums.length];
-		 int ind = 0;
-		 while(!pq.isEmpty()) {
-			 ans[ind++] = pq.poll();
-		 }
-		 return ans;
-    }
-}
+- **Submission ID:** 1351159990
+- **Original solve time (UTC):** 2024-08-10T16:48:12Z
+- **Note:** LeetCode API did not return code for this submission.
+  This placeholder ensures a backdated commit for your contribution graph.
