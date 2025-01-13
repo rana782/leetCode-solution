@@ -1,6 +1,40 @@
-# Placeholder for Find Missing Observations (find-missing-observations)
+// LeetCode: Find Missing Observations (find-missing-observations)
+// Submission ID: 1507297734
+// Language: java
+// Timestamp (UTC): 2025-01-13T14:06:16Z
 
-- **Submission ID:** 1507297734
-- **Original solve time (UTC):** 2025-01-13T14:06:16Z
-- **Note:** LeetCode API did not return code for this submission.
-  This placeholder ensures a backdated commit for your contribution graph.
+class Solution {
+       public int[] missingRolls(int[] rolls, int mean, int n) {
+        
+ int m = rolls.length;
+        int totalSum = mean * (n + m);
+        int observedSum = 0;
+        
+        for (int roll : rolls) {
+            observedSum += roll;
+        }
+        
+        int missingSum = totalSum - observedSum;
+        
+        // Check if it's possible to distribute missingSum across n rolls
+        if (missingSum < n || missingSum > 6 * n) {
+            return new int[0];  // return empty array
+        }
+        
+        // Distribute missingSum across n rolls
+        int quotient = missingSum / n;
+        int remainder = missingSum % n;
+        
+        int[] result = new int[n];
+        for (int i = 0; i < n; i++) {
+            result[i] = quotient;
+        }
+        
+        // Distribute the remainder
+        for (int i = 0; i < remainder; i++) {
+            result[i]++;
+        }
+        
+        return result;
+    }
+}
