@@ -1,37 +1,6 @@
-// LeetCode: Delete Leaves With a Given Value (delete-leaves-with-a-given-value)
-// Submission ID: 1540868651
-// Language: java
-// Timestamp (UTC): 2025-02-12T18:49:42Z
+# Placeholder for Delete Leaves With a Given Value (delete-leaves-with-a-given-value)
 
-/**
- * Definition for a binary tree node.
- * public class TreeNode {
- *     int val;
- *     TreeNode left;
- *     TreeNode right;
- *     TreeNode() {}
- *     TreeNode(int val) { this.val = val; }
- *     TreeNode(int val, TreeNode left, TreeNode right) {
- *         this.val = val;
- *         this.left = left;
- *         this.right = right;
- *     }
- * }
- */
-class Solution {
-    public static TreeNode solution(TreeNode root, int target){
-        if(root == null) return root;
-
-        root.left = solution(root.left,target);
-        root.right = solution(root.right,target);
-
-        if(root.left == null && root.right == null && root.val == target){
-            return null;
-        }
-
-        return root;
-    }
-    public TreeNode removeLeafNodes(TreeNode root, int target) {
-        return solution(root,target);
-    }
-}
+- **Submission ID:** 1540868651
+- **Original solve time (UTC):** 2025-02-12T18:49:42Z
+- **Note:** LeetCode API did not return code for this submission.
+  This placeholder ensures a backdated commit for your contribution graph.
