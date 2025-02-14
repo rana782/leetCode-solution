@@ -1,38 +1,6 @@
-// LeetCode: Kth Smallest Element in a BST (kth-smallest-element-in-a-bst)
-// Submission ID: 1542901248
-// Language: java
-// Timestamp (UTC): 2025-02-14T13:00:41Z
+# Placeholder for Kth Smallest Element in a BST (kth-smallest-element-in-a-bst)
 
-/**
- * Definition for a binary tree node.
- * public class TreeNode {
- *     int val;
- *     TreeNode left;
- *     TreeNode right;
- *     TreeNode() {}
- *     TreeNode(int val) { this.val = val; }
- *     TreeNode(int val, TreeNode left, TreeNode right) {
- *         this.val = val;
- *         this.left = left;
- *         this.right = right;
- *     }
- * }
- */
-class Solution {
-
-    public static void traverse(TreeNode root, int k, ArrayList<Integer> output){
-        if(root == null) return;
-
-        traverse(root.left,k,output);
-        output.add(root.val);
-        if(output.size() == k) return;
-        traverse(root.right,k,output);
-    }
-    public int kthSmallest(TreeNode root, int k) {
-        ArrayList<Integer> list = new ArrayList<>();
-
-        traverse(root,k,list);
-
-        return list.get(k-1);
-    }
-}
+- **Submission ID:** 1542901248
+- **Original solve time (UTC):** 2025-02-14T13:00:41Z
+- **Note:** LeetCode API did not return code for this submission.
+  This placeholder ensures a backdated commit for your contribution graph.
