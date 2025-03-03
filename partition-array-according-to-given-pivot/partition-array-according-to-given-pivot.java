@@ -1,37 +1,6 @@
-// LeetCode: Partition Array According to Given Pivot (partition-array-according-to-given-pivot)
-// Submission ID: 1561190792
-// Language: java
-// Timestamp (UTC): 2025-03-03T07:51:46Z
+# Placeholder for Partition Array According to Given Pivot (partition-array-according-to-given-pivot)
 
-class Solution {
-    public int[] pivotArray(int[] nums, int pivot) {
-        int[] arr=new int[nums.length];
-        int k=0;
-        for(int i=0;i<nums.length;i++)
-        {
-            if(nums[i]<pivot)
-            {
-            arr[k]=nums[i];
-            k++;
-            }
-        }
-        for(int i=0;i<nums.length;i++)
-        {
-            if(nums[i]==pivot)
-            {
-                arr[k]=nums[i];
-                k++;
-            }
-        }
-        for(int i=0;i<nums.length;i++)
-        {
-            if(nums[i]>pivot)
-            {
-                arr[k]=nums[i];
-                k++;
-            }
-        }
-        return arr;
-        
-    }
-}
+- **Submission ID:** 1561190792
+- **Original solve time (UTC):** 2025-03-03T07:51:46Z
+- **Note:** LeetCode API did not return code for this submission.
+  This placeholder ensures a backdated commit for your contribution graph.
