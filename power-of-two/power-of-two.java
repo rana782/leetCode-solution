@@ -1,6 +1,18 @@
-# Placeholder for Power of Two (power-of-two)
+// LeetCode: Power of Two (power-of-two)
+// Submission ID: 1587810372
+// Language: java
+// Timestamp (UTC): 2025-03-27T06:53:15Z
 
-- **Submission ID:** 1587810372
-- **Original solve time (UTC):** 2025-03-27T06:53:14Z
-- **Note:** LeetCode API did not return code for this submission.
-  This placeholder ensures a backdated commit for your contribution graph.
+class Solution {
+    public boolean isPowerOfTwo(int n) {
+        if(n<=0) return false;
+        if(n == 1) return true;
+        while(n!=0){
+            if( n!=1 && n%2!=0) return false;
+            n/=2;
+
+        }
+
+        return true;
+    }
+}
