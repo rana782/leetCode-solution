@@ -1,6 +1,21 @@
-# Placeholder for Minimum Time Visiting All Points (minimum-time-visiting-all-points)
+// LeetCode: Minimum Time Visiting All Points (minimum-time-visiting-all-points)
+// Submission ID: 1655723906
+// Language: java
+// Timestamp (UTC): 2025-06-06T13:58:45Z
 
-- **Submission ID:** 1655723906
-- **Original solve time (UTC):** 2025-06-06T13:58:45Z
-- **Note:** LeetCode API did not return code for this submission.
-  This placeholder ensures a backdated commit for your contribution graph.
+class Solution {
+    public int minTimeToVisitAllPoints(int[][] points) {
+        
+        int output = 0;
+        
+        for(int i = 0;i<points.length-1; i++){
+            int s[] = points[i];
+            int t[] = points[i+1];
+                
+                
+                output+=Math.max(Math.abs(s[0]-t[0]),Math.abs(s[1]-t[1]));
+        }
+        
+        return output;
+    }
+}
