@@ -1,6 +1,20 @@
-# Placeholder for Squares of a Sorted Array (squares-of-a-sorted-array)
+// LeetCode: Squares of a Sorted Array (squares-of-a-sorted-array)
+// Submission ID: 1656275607
+// Language: java
+// Timestamp (UTC): 2025-06-07T06:11:26Z
 
-- **Submission ID:** 1656275607
-- **Original solve time (UTC):** 2025-06-07T06:11:26Z
-- **Note:** LeetCode API did not return code for this submission.
-  This placeholder ensures a backdated commit for your contribution graph.
+class Solution {
+    public int[] sortedSquares(int[] nums) {
+        for(int i = 0; i<nums.length; i++){
+            nums[i] = Math.abs(nums[i]);
+        }
+        
+        Arrays.sort(nums);
+        
+        for(int i = 0; i<nums.length; i++){
+            nums[i] = nums[i]*nums[i];
+        }
+        
+        return nums;
+    }
+}
