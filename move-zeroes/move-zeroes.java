@@ -1,6 +1,22 @@
-# Placeholder for Move Zeroes (move-zeroes)
+// LeetCode: Move Zeroes (move-zeroes)
+// Submission ID: 1658987123
+// Language: java
+// Timestamp (UTC): 2025-06-09T18:49:29Z
 
-- **Submission ID:** 1658987123
-- **Original solve time (UTC):** 2025-06-09T18:49:28Z
-- **Note:** LeetCode API did not return code for this submission.
-  This placeholder ensures a backdated commit for your contribution graph.
+class Solution {
+    public void moveZeroes(int[] nums) {
+        List<Integer>res = new ArrayList<>();
+        for(int ele : nums){
+            if(ele!=0)res.add(ele);
+        }
+        
+        for(int i = 0; i<nums.length; i++){
+            if(i<res.size()){
+                nums[i] = res.get(i);
+            }
+            else{
+                nums[i] = 0;
+            }
+        }
+    }
+}
