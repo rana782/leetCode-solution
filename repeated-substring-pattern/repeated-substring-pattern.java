@@ -1,12 +1,6 @@
-// LeetCode: Repeated Substring Pattern (repeated-substring-pattern)
-// Submission ID: 1669996456
-// Language: java
-// Timestamp (UTC): 2025-06-20T02:03:15Z
+# Placeholder for Repeated Substring Pattern (repeated-substring-pattern)
 
-class Solution {
- public boolean repeatedSubstringPattern(String s) {
-    String doubled = s + s;
-    return doubled.substring(1, doubled.length() - 1).contains(s);
-}
-
-}
+- **Submission ID:** 1669996456
+- **Original solve time (UTC):** 2025-06-20T02:03:15Z
+- **Note:** LeetCode API did not return code for this submission.
+  This placeholder ensures a backdated commit for your contribution graph.
