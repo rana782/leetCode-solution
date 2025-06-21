@@ -1,17 +1,6 @@
-// LeetCode: Kth Missing Positive Number (kth-missing-positive-number)
-// Submission ID: 1671470190
-// Language: java
-// Timestamp (UTC): 2025-06-21T11:52:27Z
+# Placeholder for Kth Missing Positive Number (kth-missing-positive-number)
 
-class Solution {
-    public int findKthPositive(int[] arr, int k) {
-        for(int ele : arr){
-            if(ele<=k)k+=1;
-            else{
-                return k;
-            }
-        }
-
-        return k;
-    }
-}
+- **Submission ID:** 1671470190
+- **Original solve time (UTC):** 2025-06-21T11:52:27Z
+- **Note:** LeetCode API did not return code for this submission.
+  This placeholder ensures a backdated commit for your contribution graph.
