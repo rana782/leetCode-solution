@@ -1,0 +1,13 @@
+// LeetCode: Sellers With No Sales (sellers-with-no-sales)
+// Submission ID: 1738953953
+// Language: mysql
+// Timestamp (UTC): 2025-08-17T20:06:28Z
+
+# Write your MySQL query statement below
+select s.seller_name
+from Seller s
+left join Orders o
+on s.seller_id=o.seller_id
+and YEAR(o.sale_date)='2020'
+where o.seller_id is null
+order by s.seller_name
