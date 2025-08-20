@@ -1,0 +1,12 @@
+// LeetCode: Bank Account Summary II (bank-account-summary-ii)
+// Submission ID: 1742543149
+// Language: mysql
+// Timestamp (UTC): 2025-08-20T20:42:55Z
+
+# Write your MySQL query statement below
+select u.name,sum(t.amount)as balance
+from Transactions t
+join Users u
+on t.account=u.account
+group by t.account
+having balance>10000
