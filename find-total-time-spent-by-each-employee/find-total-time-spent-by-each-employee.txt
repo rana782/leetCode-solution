@@ -1,0 +1,10 @@
+// LeetCode: Find Total Time Spent by Each Employee (find-total-time-spent-by-each-employee)
+// Submission ID: 1742124905
+// Language: mysql
+// Timestamp (UTC): 2025-08-20T14:13:24Z
+
+# Write your MySQL query statement below
+select event_day as day,emp_id,
+sum(out_time-in_time) as total_time
+from Employees
+group by event_day,emp_id
