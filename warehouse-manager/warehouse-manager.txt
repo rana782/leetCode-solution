@@ -1,0 +1,11 @@
+// LeetCode: Warehouse Manager (warehouse-manager)
+// Submission ID: 1742112166
+// Language: mysql
+// Timestamp (UTC): 2025-08-20T14:01:31Z
+
+select w.name as warehouse_name,
+       sum(w.units*p.width*p.length*p.height) as volume
+from Warehouse w
+join Products p
+on w.product_id=p.product_id
+group by w.name
