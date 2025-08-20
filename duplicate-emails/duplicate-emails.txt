@@ -1,0 +1,11 @@
+// LeetCode: Duplicate Emails (duplicate-emails)
+// Submission ID: 1742546019
+// Language: mysql
+// Timestamp (UTC): 2025-08-20T20:47:36Z
+
+# Write your MySQL query statement below
+select email
+from Person
+group by email
+having count(*)>1
+
