@@ -1,0 +1,11 @@
+// LeetCode: Customer Placing the Largest Number of Orders (customer-placing-the-largest-number-of-orders)
+// Submission ID: 1742119574
+// Language: mysql
+// Timestamp (UTC): 2025-08-20T14:08:30Z
+
+# Write your MySQL query statement below
+select customer_number
+from Orders
+group by customer_number
+order by count(*) desc
+limit 1
