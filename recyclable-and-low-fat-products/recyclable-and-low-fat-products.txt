@@ -1,0 +1,9 @@
+// LeetCode: Recyclable and Low Fat Products (recyclable-and-low-fat-products)
+// Submission ID: 1745080983
+// Language: pythondata
+// Timestamp (UTC): 2025-08-23T06:44:39Z
+
+import pandas as pd
+
+def find_products(products: pd.DataFrame) -> pd.DataFrame:
+    return products[(products["low_fats"]=='Y')&(products["recyclable"]=='Y')][["product_id"]]
