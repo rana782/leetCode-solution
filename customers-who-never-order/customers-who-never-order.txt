@@ -1,0 +1,12 @@
+// LeetCode: Customers Who Never Order (customers-who-never-order)
+// Submission ID: 1745110953
+// Language: pythondata
+// Timestamp (UTC): 2025-08-23T07:18:06Z
+
+import pandas as pd
+
+def find_customers(customers: pd.DataFrame, orders: pd.DataFrame) -> pd.DataFrame:
+    merged=customers.merge(orders,left_on="id",right_on="customerId",how="left")
+    result= merged[merged["customerId"].isna()][["name"]]
+    result=result.rename(columns={"name":"Customers"})
+    return result
