@@ -1,0 +1,10 @@
+// LeetCode: Invalid Tweets (invalid-tweets)
+// Submission ID: 1745775294
+// Language: pythondata
+// Timestamp (UTC): 2025-08-23T19:03:51Z
+
+import pandas as pd
+
+def invalid_tweets(tweets: pd.DataFrame) -> pd.DataFrame:
+    invalid=tweets[tweets["content"].str.len()>15][["tweet_id"]]
+    return invalid
