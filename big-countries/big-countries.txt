@@ -1,0 +1,9 @@
+// LeetCode: Big Countries (big-countries)
+// Submission ID: 1746238138
+// Language: pythondata
+// Timestamp (UTC): 2025-08-24T06:02:17Z
+
+import pandas as pd
+
+def big_countries(world: pd.DataFrame) -> pd.DataFrame:
+    return world[(world["area"]>=3000000)|(world["population"]>=25000000)][["name","population","area"]]
