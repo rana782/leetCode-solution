@@ -1,0 +1,15 @@
+// LeetCode: Customer Order Frequency (customer-order-frequency)
+// Submission ID: 1746252572
+// Language: mysql
+// Timestamp (UTC): 2025-08-24T06:16:31Z
+
+# Write your MySQL query statement below
+select o.customer_id,c.name
+from Orders o
+join Product p
+on o.product_id=p.product_id
+join Customers c
+on o.customer_id=c.customer_id
+group by o.customer_id
+having sum(case when date_format(o.order_date, '%Y-%m') ='2020-06' then o.quantity*p.price else 0 end)>=100 and 
+       sum(case when date_format(o.order_date, '%Y-%m') ='2020-07' then o.quantity*p.price else 0 end )>=100
