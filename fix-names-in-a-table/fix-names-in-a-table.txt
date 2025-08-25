@@ -1,0 +1,10 @@
+// LeetCode: Fix Names in a Table (fix-names-in-a-table)
+// Submission ID: 1747336143
+// Language: pythondata
+// Timestamp (UTC): 2025-08-25T05:18:28Z
+
+import pandas as pd
+
+def fix_names(users: pd.DataFrame) -> pd.DataFrame:
+    users["name"]=users["name"].str.capitalize()
+    return users.sort_values('user_id')
