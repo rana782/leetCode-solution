@@ -1,0 +1,10 @@
+// LeetCode: Find Users With Valid E-Mails (find-users-with-valid-e-mails)
+// Submission ID: 1747364073
+// Language: pythondata
+// Timestamp (UTC): 2025-08-25T05:49:47Z
+
+import pandas as pd
+
+def valid_emails(users: pd.DataFrame) -> pd.DataFrame:
+    pattern=r'^[A-Za-z][A-Za-z0-9_\.\-]*@leetcode\.com$'
+    return users[users["mail"].str.match(pattern)]
