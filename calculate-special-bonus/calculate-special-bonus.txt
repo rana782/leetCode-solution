@@ -1,0 +1,11 @@
+// LeetCode: Calculate Special Bonus (calculate-special-bonus)
+// Submission ID: 1747331169
+// Language: pythondata
+// Timestamp (UTC): 2025-08-25T05:12:57Z
+
+import pandas as pd
+
+def calculate_special_bonus(employees: pd.DataFrame) -> pd.DataFrame:
+    cond=(employees["employee_id"]%2==1)&(~employees["name"].str.startswith("M"))
+    employees["bonus"]=employees["salary"].where(cond,0)
+    return employees[["employee_id","bonus"]].sort_values("employee_id")
