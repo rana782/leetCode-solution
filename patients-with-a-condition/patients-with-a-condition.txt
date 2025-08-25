@@ -1,0 +1,9 @@
+// LeetCode: Patients With a Condition (patients-with-a-condition)
+// Submission ID: 1747373370
+// Language: pythondata
+// Timestamp (UTC): 2025-08-25T05:59:55Z
+
+import pandas as pd
+
+def find_patients(patients: pd.DataFrame) -> pd.DataFrame:
+    return patients[patients["conditions"].str.contains(r'(^DIAB1|\S DIAB1)')]
