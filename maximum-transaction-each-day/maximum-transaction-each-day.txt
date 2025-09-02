@@ -1,0 +1,14 @@
+// LeetCode: Maximum Transaction Each Day (maximum-transaction-each-day)
+// Submission ID: 1756695997
+// Language: mysql
+// Timestamp (UTC): 2025-09-02T06:24:14Z
+
+# Write your MySQL query statement below
+select transaction_id
+from(
+    select transaction_id,
+    rank()over(partition by day order by amount desc) as rnk
+    from Transactions a
+) t
+where rnk=1
+order by transaction_id
