@@ -1,0 +1,14 @@
+// LeetCode: Project Employees III (project-employees-iii)
+// Submission ID: 1756717352
+// Language: mysql
+// Timestamp (UTC): 2025-09-02T06:45:07Z
+
+# Write your MySQL query statement below
+select project_id,employee_id
+from( select p.project_id,p.employee_id,
+    rank() over(partition by p.project_id order by e.experience_years desc) as rnk
+    from Project p
+    join Employee e
+    on p.employee_id=e.employee_id
+) a
+where rnk=1
