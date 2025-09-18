@@ -47,4 +47,9 @@
 |  |
 | ------- |
 | [1005-univalued-binary-tree](https://github.com/rana782/leetCode-solution/tree/master/1005-univalued-binary-tree) |
+| [1007-numbers-with-same-consecutive-differences](https://github.com/rana782/leetCode-solution/tree/master/1007-numbers-with-same-consecutive-differences) |
+## Backtracking
+|  |
+| ------- |
+| [1007-numbers-with-same-consecutive-differences](https://github.com/rana782/leetCode-solution/tree/master/1007-numbers-with-same-consecutive-differences) |
 <!---LeetCode Topics End-->
