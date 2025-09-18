@@ -7,19 +7,23 @@
 | ------- |
 | [0985-bag-of-tokens](https://github.com/rana782/leetCode-solution/tree/master/0985-bag-of-tokens) |
 | [0987-reveal-cards-in-increasing-order](https://github.com/rana782/leetCode-solution/tree/master/0987-reveal-cards-in-increasing-order) |
+| [1009-pancake-sorting](https://github.com/rana782/leetCode-solution/tree/master/1009-pancake-sorting) |
 ## Two Pointers
 |  |
 | ------- |
 | [0985-bag-of-tokens](https://github.com/rana782/leetCode-solution/tree/master/0985-bag-of-tokens) |
+| [1009-pancake-sorting](https://github.com/rana782/leetCode-solution/tree/master/1009-pancake-sorting) |
 ## Greedy
 |  |
 | ------- |
 | [0985-bag-of-tokens](https://github.com/rana782/leetCode-solution/tree/master/0985-bag-of-tokens) |
+| [1009-pancake-sorting](https://github.com/rana782/leetCode-solution/tree/master/1009-pancake-sorting) |
 ## Sorting
 |  |
 | ------- |
 | [0985-bag-of-tokens](https://github.com/rana782/leetCode-solution/tree/master/0985-bag-of-tokens) |
 | [0987-reveal-cards-in-increasing-order](https://github.com/rana782/leetCode-solution/tree/master/0987-reveal-cards-in-increasing-order) |
+| [1009-pancake-sorting](https://github.com/rana782/leetCode-solution/tree/master/1009-pancake-sorting) |
 ## Tree
 |  |
 | ------- |
