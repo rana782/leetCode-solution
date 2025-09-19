@@ -29,16 +29,19 @@
 | ------- |
 | [0988-flip-equivalent-binary-trees](https://github.com/rana782/leetCode-solution/tree/master/0988-flip-equivalent-binary-trees) |
 | [1005-univalued-binary-tree](https://github.com/rana782/leetCode-solution/tree/master/1005-univalued-binary-tree) |
+| [1021-distribute-coins-in-binary-tree](https://github.com/rana782/leetCode-solution/tree/master/1021-distribute-coins-in-binary-tree) |
 ## Depth-First Search
 |  |
 | ------- |
 | [0988-flip-equivalent-binary-trees](https://github.com/rana782/leetCode-solution/tree/master/0988-flip-equivalent-binary-trees) |
 | [1005-univalued-binary-tree](https://github.com/rana782/leetCode-solution/tree/master/1005-univalued-binary-tree) |
+| [1021-distribute-coins-in-binary-tree](https://github.com/rana782/leetCode-solution/tree/master/1021-distribute-coins-in-binary-tree) |
 ## Binary Tree
 |  |
 | ------- |
 | [0988-flip-equivalent-binary-trees](https://github.com/rana782/leetCode-solution/tree/master/0988-flip-equivalent-binary-trees) |
 | [1005-univalued-binary-tree](https://github.com/rana782/leetCode-solution/tree/master/1005-univalued-binary-tree) |
+| [1021-distribute-coins-in-binary-tree](https://github.com/rana782/leetCode-solution/tree/master/1021-distribute-coins-in-binary-tree) |
 ## Queue
 |  |
 | ------- |
