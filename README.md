@@ -8,6 +8,7 @@
 | [0985-bag-of-tokens](https://github.com/rana782/leetCode-solution/tree/master/0985-bag-of-tokens) |
 | [0987-reveal-cards-in-increasing-order](https://github.com/rana782/leetCode-solution/tree/master/0987-reveal-cards-in-increasing-order) |
 | [1009-pancake-sorting](https://github.com/rana782/leetCode-solution/tree/master/1009-pancake-sorting) |
+| [1041-available-captures-for-rook](https://github.com/rana782/leetCode-solution/tree/master/1041-available-captures-for-rook) |
 ## Two Pointers
 |  |
 | ------- |
@@ -50,6 +51,7 @@
 |  |
 | ------- |
 | [0987-reveal-cards-in-increasing-order](https://github.com/rana782/leetCode-solution/tree/master/0987-reveal-cards-in-increasing-order) |
+| [1041-available-captures-for-rook](https://github.com/rana782/leetCode-solution/tree/master/1041-available-captures-for-rook) |
 ## Breadth-First Search
 |  |
 | ------- |
@@ -59,4 +61,8 @@
 |  |
 | ------- |
 | [1007-numbers-with-same-consecutive-differences](https://github.com/rana782/leetCode-solution/tree/master/1007-numbers-with-same-consecutive-differences) |
+## Matrix
+|  |
+| ------- |
+| [1041-available-captures-for-rook](https://github.com/rana782/leetCode-solution/tree/master/1041-available-captures-for-rook) |
 <!---LeetCode Topics End-->
