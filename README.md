@@ -9,6 +9,7 @@
 | [0987-reveal-cards-in-increasing-order](https://github.com/rana782/leetCode-solution/tree/master/0987-reveal-cards-in-increasing-order) |
 | [1009-pancake-sorting](https://github.com/rana782/leetCode-solution/tree/master/1009-pancake-sorting) |
 | [1041-available-captures-for-rook](https://github.com/rana782/leetCode-solution/tree/master/1041-available-captures-for-rook) |
+| [3242-count-elements-with-maximum-frequency](https://github.com/rana782/leetCode-solution/tree/master/3242-count-elements-with-maximum-frequency) |
 ## Two Pointers
 |  |
 | ------- |
@@ -65,4 +66,12 @@
 |  |
 | ------- |
 | [1041-available-captures-for-rook](https://github.com/rana782/leetCode-solution/tree/master/1041-available-captures-for-rook) |
+## Hash Table
+|  |
+| ------- |
+| [3242-count-elements-with-maximum-frequency](https://github.com/rana782/leetCode-solution/tree/master/3242-count-elements-with-maximum-frequency) |
+## Counting
+|  |
+| ------- |
+| [3242-count-elements-with-maximum-frequency](https://github.com/rana782/leetCode-solution/tree/master/3242-count-elements-with-maximum-frequency) |
 <!---LeetCode Topics End-->
