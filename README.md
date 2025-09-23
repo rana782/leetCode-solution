@@ -53,6 +53,7 @@
 | ------- |
 | [0987-reveal-cards-in-increasing-order](https://github.com/rana782/leetCode-solution/tree/master/0987-reveal-cards-in-increasing-order) |
 | [1041-available-captures-for-rook](https://github.com/rana782/leetCode-solution/tree/master/1041-available-captures-for-rook) |
+| [1119-robot-bounded-in-circle](https://github.com/rana782/leetCode-solution/tree/master/1119-robot-bounded-in-circle) |
 ## Breadth-First Search
 |  |
 | ------- |
@@ -74,4 +75,12 @@
 |  |
 | ------- |
 | [3242-count-elements-with-maximum-frequency](https://github.com/rana782/leetCode-solution/tree/master/3242-count-elements-with-maximum-frequency) |
+## Math
+|  |
+| ------- |
+| [1119-robot-bounded-in-circle](https://github.com/rana782/leetCode-solution/tree/master/1119-robot-bounded-in-circle) |
+## String
+|  |
+| ------- |
+| [1119-robot-bounded-in-circle](https://github.com/rana782/leetCode-solution/tree/master/1119-robot-bounded-in-circle) |
 <!---LeetCode Topics End-->
