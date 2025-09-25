@@ -67,43 +67,107 @@ def save_state(state):
 def safe_filename(s):
     return "".join(c if c.isalnum() or c in "-_." else "_" for c in (s or ""))
 
-def fetch_all_submissions(limit=1000, sleep_between=0.25, max_retries=3):
+def fetch_all_submissions(limit=200, sleep_between=0.25, max_retries=3):
     """
-    Fetch all submissions using REST endpoint with paging.
-    Default limit=1000 (large) so most accounts get everything in one call.
-    Falls back to paging if server still sends < limit per page.
+    Fetch all submissions using LeetCode GraphQL submissionList (preferred).
+    - limit: page size (200 is safe; increase if needed)
+    - If GraphQL fails or returns nothing, fall back to REST API.
     """
+    def fetch_rest(limit, sleep_between, max_retries):
+        # fallback: original REST fetch (keeps same behavior)
+        subs = []
+        offset = 0
+        while True:
+            url = f"{API_BASE}?offset={offset}&limit={limit}"
+            for attempt in range(1, max_retries + 1):
+                try:
+                    r = session.get(url, timeout=30)
+                    break
+                except Exception as e:
+                    print(f"REST request failed (attempt {attempt}/{max_retries}):", e)
+                    if attempt == max_retries:
+                        raise
+                    time.sleep(1.0 * attempt)
+            if r.status_code != 200:
+                print("REST: Failed to fetch submissions:", r.status_code)
+                print("Response snippet:", getattr(r, "text", "")[:400])
+                break
+            data = r.json()
+            batch = data.get("submissions_dump") or data.get("submissions") or []
+            if not batch:
+                break
+            subs.extend(batch)
+            print(f"REST: Fetched page: offset={offset}, returned={len(batch)}")
+            if len(batch) < limit:
+                break
+            offset += limit
+            time.sleep(sleep_between)
+        return subs
+
+    # GraphQL query for submissionList
+    gql = """
+    query submissionList($offset: Int!, $limit: Int!) {
+      submissionList(offset: $offset, limit: $limit) {
+        submissions {
+          id
+          title
+          titleSlug
+          statusDisplay
+          lang
+          timestamp
+          code
+        }
+        hasNext
+      }
+    }
+    """
+
     subs = []
     offset = 0
     while True:
-        url = f"{API_BASE}?offset={offset}&limit={limit}"
-        # retry loop for transient errors
+        payload = {"query": gql, "variables": {"offset": offset, "limit": limit}}
+        # retry logic
+        r = None
         for attempt in range(1, max_retries + 1):
             try:
-                r = session.get(url, timeout=30)
+                r = session.post("https://leetcode.com/graphql", json=payload, timeout=30)
                 break
             except Exception as e:
-                print(f"Warning: request failed (attempt {attempt}/{max_retries}):", e)
+                print(f"GraphQL request failed (attempt {attempt}/{max_retries}):", e)
                 if attempt == max_retries:
-                    raise
-                time.sleep(1.0 * attempt)
-        if r.status_code != 200:
-            print("Failed to fetch submissions:", r.status_code)
-            print("Response snippet:", r.text[:400])
-            break
-        data = r.json()
-        batch = data.get("submissions_dump") or data.get("submissions") or []
+                    print("GraphQL failed repeatedly; falling back to REST.")
+                    return fetch_rest(limit=limit, sleep_between=sleep_between, max_retries=max_retries)
+                time.sleep(attempt * 0.8)
+
+        if r is None or r.status_code != 200:
+            print("GraphQL: non-200 response; falling back to REST. status:", getattr(r, "status_code", None))
+            return fetch_rest(limit=limit, sleep_between=sleep_between, max_retries=max_retries)
+
+        body = r.json()
+        batch = None
+        try:
+            batch = body.get("data", {}).get("submissionList", {}).get("submissions")
+        except Exception:
+            batch = None
+
+        # if GraphQL returns nothing, fallback to REST
         if not batch:
-            # no more submissions
-            break
+            print("GraphQL: no submissions in response; falling back to REST.")
+            return fetch_rest(limit=limit, sleep_between=sleep_between, max_retries=max_retries)
+
         subs.extend(batch)
-        print(f"Fetched page: offset={offset}, returned={len(batch)}")
-        # If server returned fewer than requested, that often means we've reached the end.
-        if len(batch) < limit:
+        print(f"GraphQL: Fetched page: offset={offset}, returned={len(batch)}")
+
+        has_next = body.get("data", {}).get("submissionList", {}).get("hasNext")
+        # stop if server signals no next or less than limit returned
+        if has_next is False or len(batch) < limit:
             break
+
         offset += limit
         time.sleep(sleep_between)
+
     return subs
+
 
 
 def write_and_commit(sub):
