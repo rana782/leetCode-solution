@@ -23,13 +23,4 @@ class Solution {
         return dfs(0, 0, triangle);
     }
 
-    // quick test helper (optional)
-    public static void main(String[] args) {
-        List<List<Integer>> tri = Arrays.asList(
-            Arrays.asList(-1),
-            Arrays.asList(3, 2),
-            Arrays.asList(-3, 1, -1)
-        );
-        System.out.println(new Solution().minimumTotal(tri)); // prints -1
-    }
 }
