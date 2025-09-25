@@ -1,10 +1,10 @@
-name: Rewrite commit authors (shell env-filter)
+name: Rewrite commit authors (safe env-filter)
 
 on:
   workflow_dispatch:
     inputs:
       do_rewrite:
-        description: 'Set to "yes" to perform the rewrite and force-push. Default "no" -> dry-run.'
+        description: 'Set to "yes" to perform the rewrite and force-push. Default "no" (dry-run).'
         required: true
         default: "no"
 
@@ -31,28 +31,19 @@ jobs:
           echo "backup_branch=$backup" >> $GITHUB_OUTPUT
           echo "Created backup branch: $backup"
 
-      - name: Dry-run: show commits that look like bot-authored (sample)
+      - name: Dry-run: show candidate bot commits (sample)
         run: |
-          echo "Showing commits with 'github-actions' or 'users.noreply' in author/committer (sample):"
+          echo "Showing commits that likely use bot identities (sample):"
           git log --all --pretty=format:"%h | %an | %ae | %cn | %ce | %ad | %s" \
             | grep -Ei 'github-actions|users.noreply' || true
           echo
-          echo "If you see lines above, those commits are candidates to be re-attributed."
+          echo "If you see matches above, those are candidates to be re-attributed."
 
-      - name: Perform rewrite (only if do_rewrite == yes)
-        if: ${{ github.event.inputs.do_rewrite == 'yes' }}
-        env:
-          NEW_NAME: ${{ github.actor }}
-          NEW_EMAIL: ${{ secrets.MY_GH_EMAIL }}
+      - name: Prepare env-filter script
         run: |
-          set -e
-          echo "Rewriting history: replacing bot identities with $NEW_NAME <$NEW_EMAIL>"
-          git fetch --all
-
-          # Create an env-filter script that checks if author/committer match bot patterns,
-          # and if so, set the author/committer to the NEW_NAME/NEW_EMAIL
-          cat > env-filter.sh <<'SH'
+          cat > env-filter.sh <<'ENV'
 #!/bin/sh
+# If author/committer contains github-actions or users.noreply, replace with NEW_NAME/NEW_EMAIL
 case "$(printf '%s' "$GIT_AUTHOR_NAME:$GIT_AUTHOR_EMAIL:$GIT_COMMITTER_NAME:$GIT_COMMITTER_EMAIL")" in
   *github-actions*|*users.noreply.github.com*)
     export GIT_AUTHOR_NAME="$NEW_NAME"
@@ -61,22 +52,31 @@ case "$(printf '%s' "$GIT_AUTHOR_NAME:$GIT_AUTHOR_EMAIL:$GIT_COMMITTER_NAME:$GIT
     export GIT_COMMITTER_EMAIL="$NEW_EMAIL"
     ;;
 esac
-SH
+ENV
           chmod +x env-filter.sh
+          echo "env-filter.sh prepared."
 
-          # Run filter-branch (this will rewrite history where env-filter changes environment)
+      - name: Perform rewrite (only if do_rewrite == yes)
+        if: ${{ github.event.inputs.do_rewrite == 'yes' }}
+        env:
+          NEW_NAME: ${{ github.actor }}
+          NEW_EMAIL: ${{ secrets.MY_GH_EMAIL }}
+        run: |
+          set -e
+          echo "Starting history rewrite: replacing bot identities with $NEW_NAME <$NEW_EMAIL>"
+          git fetch --all
+          # rewrite commits where env-filter changes the author/committer env
           git filter-branch --env-filter 'sh env-filter.sh' -- --all
-
           echo "Rewrite finished. Force-pushing rewritten branches and tags to origin..."
           git push --force --tags origin 'refs/heads/*'
           echo "Force-push done."
 
-      - name: Notice (dry-run)
+      - name: Dry-run notice (when not rewriting)
         if: ${{ github.event.inputs.do_rewrite != 'yes' }}
         run: |
-          echo "Dry-run finished. No rewrite was performed. To rewrite history, re-run this workflow and set do_rewrite to 'yes'."
+          echo "Dry-run complete. No rewrite performed. Re-run this workflow with do_rewrite = yes to apply changes."
 
-      - name: Show last 30 commits (for verification)
+      - name: Show last 30 commits (verification)
         run: |
           echo "Last 30 commits (newest first):"
           git --no-pager log -n 30 --pretty=format:"%h | %an <%ae> | %ad | %s"
