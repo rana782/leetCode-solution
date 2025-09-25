@@ -67,12 +67,26 @@ def save_state(state):
 def safe_filename(s):
     return "".join(c if c.isalnum() or c in "-_." else "_" for c in (s or ""))
 
-def fetch_all_submissions(limit=50, sleep_between=0.2):
+def fetch_all_submissions(limit=1000, sleep_between=0.25, max_retries=3):
+    """
+    Fetch all submissions using REST endpoint with paging.
+    Default limit=1000 (large) so most accounts get everything in one call.
+    Falls back to paging if server still sends < limit per page.
+    """
     subs = []
     offset = 0
     while True:
         url = f"{API_BASE}?offset={offset}&limit={limit}"
-        r = session.get(url, timeout=30)
+        # retry loop for transient errors
+        for attempt in range(1, max_retries + 1):
+            try:
+                r = session.get(url, timeout=30)
+                break
+            except Exception as e:
+                print(f"Warning: request failed (attempt {attempt}/{max_retries}):", e)
+                if attempt == max_retries:
+                    raise
+                time.sleep(1.0 * attempt)
         if r.status_code != 200:
             print("Failed to fetch submissions:", r.status_code)
             print("Response snippet:", r.text[:400])
@@ -80,13 +94,17 @@ def fetch_all_submissions(limit=50, sleep_between=0.2):
         data = r.json()
         batch = data.get("submissions_dump") or data.get("submissions") or []
         if not batch:
+            # no more submissions
             break
         subs.extend(batch)
+        print(f"Fetched page: offset={offset}, returned={len(batch)}")
+        # If server returned fewer than requested, that often means we've reached the end.
         if len(batch) < limit:
             break
         offset += limit
         time.sleep(sleep_between)
     return subs
+
 
 def write_and_commit(sub):
     status = (sub.get("status_display") or sub.get("status") or "").lower()
