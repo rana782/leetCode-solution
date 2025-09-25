@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 LeetCode sync with backdated commits credited to your GitHub account,
-and explicit heatmap date logs for each commit.
+and forced commits (--allow-empty) when FORCE_RECOMMIT=1.
 
 Behavior:
 - Lists ALL submissions via REST (paginated, auto-retry on 403)
@@ -211,16 +211,10 @@ def main():
     for slug, meta in latest.items():
         sid = meta.get("id")
         if not sid:
-            print("Skipping", slug, "- no submission id")
-            continue
-
-        if str(sid) in processed_ids and not FORCE_RECOMMIT:
-            # already done
             continue
 
         details = fetch_submission_code_graphql(sid)
         if not details or not details.get("code"):
-            print("No code for", slug, "submission", sid)
             continue
 
         code = details["code"]
@@ -228,7 +222,6 @@ def main():
         ext = EXT_MAP.get(lang, "txt")
         ts = to_int_ts(details.get("timestamp") or meta.get("timestamp"))
         if ts == 0:
-            print("Skipping", slug, "because timestamp missing")
             continue
 
         dt = datetime.fromtimestamp(ts, tz=timezone.utc)
@@ -252,9 +245,8 @@ def main():
             save_state(state)
             continue
 
-        # write and commit (backdated) with AUTHOR info
-        with open(file_path, "w", encoding="utf-8") as f:
-            f.write(new_content)
+        # Write file
+        file_path.write_text(new_content, encoding="utf-8")
 
         run_git(["add", str(file_path)])
 
@@ -267,12 +259,15 @@ def main():
             "GIT_COMMITTER_EMAIL": AUTHOR_EMAIL
         }
 
-        commit_msg = f"Latest LeetCode: {meta.get('title')} ({slug}) — solved on {iso}"
-        run_git(["commit", "-m", commit_msg], env=env)
+        commit_msg = f"LeetCode: {meta.get('title')} ({slug}) — solved on {iso}"
 
-        # explicit heatmap-date line for logs
-        print(f"Committed {slug} at {iso}")
-        print(f"Heatmap date → {iso} (author: {AUTHOR_NAME} <{AUTHOR_EMAIL}>)")
+        if FORCE_RECOMMIT:
+            # Force commit even if identical (heatmap backfill)
+            run_git(["commit", "--allow-empty", "-m", commit_msg], env=env)
+            print(f"Forced commit for {slug} at {iso} (heatmap date)")
+        else:
+            run_git(["commit", "-m", commit_msg], env=env)
+            print(f"Committed {slug} at {iso}")
 
         created += 1
         processed_ids.add(str(sid))
