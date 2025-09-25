@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       do_rewrite:
-        description: 'Set to "yes" to perform the rewrite and force-push. Default "no" (dry-run).'
+        description: 'Set to "yes" to perform the rewrite and force-push. Default: "no" (dry-run).'
         required: true
         default: "no"
 
