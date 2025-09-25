@@ -1,23 +1,15 @@
 #!/usr/bin/env python3
 """
 leetcode_sync.py
+Fetch LeetCode submissions and commit them with original submission timestamps.
+Designed to run inside GitHub Actions (or locally).
 
-- Fetches all LeetCode submissions (paginated).
-- Writes accepted submissions into folders named after problem slug.
-- Commits each submission file with original LeetCode timestamp (GIT_AUTHOR_DATE/GIT_COMMITTER_DATE).
-- Keeps a small state file (.leetcode_sync_state.json) so runs can resume.
-Designed for running inside GitHub Actions (or locally).
-Env:
-  - LEETCODE_SESSION (required) -> LeetCode session cookie (set in GitHub Secrets)
-  - REPO_PATH (optional) -> path to repo (defaults to current working dir)
+Environment:
+  - LEETCODE_SESSION (required) -> LeetCode session cookie (set as a GitHub Secret)
+  - REPO_PATH (optional) -> repo path (defaults to workspace)
   - BRANCH (optional) -> branch to push to (defaults to 'main')
 """
-import os
-import sys
-import time
-import json
-import requests
-import subprocess
+import os, sys, time, json, requests, subprocess
 from pathlib import Path
 from datetime import datetime, timezone
 
@@ -26,26 +18,25 @@ REPO_PATH = Path(os.environ.get("REPO_PATH", os.getcwd()))
 BRANCH = os.environ.get("BRANCH", "main")
 
 if not LEETCODE_SESSION:
-    print("ERROR: LEETCODE_SESSION environment variable is not set. Exiting.")
+    print("ERROR: LEETCODE_SESSION not set. Add it to repo secrets.")
     sys.exit(1)
 
 if not (REPO_PATH.exists() and (REPO_PATH / ".git").exists()):
-    print(f"ERROR: REPO_PATH {REPO_PATH} not found or not a git repository.")
+    print(f"ERROR: REPO_PATH {REPO_PATH} not found or not a git repo.")
     sys.exit(1)
 
 STATE_FILE = REPO_PATH / ".leetcode_sync_state.json"
 
-# language -> extension mapping (expand if needed)
 EXT_MAP = {
-    "cpp": "cpp", "c++": "cpp", "java": "java", "python": "py", "python3": "py",
-    "c": "c", "c#": "cs", "csharp": "cs", "javascript": "js", "ruby": "rb",
-    "swift": "swift", "go": "go", "rust": "rs", "kotlin": "kt", "scala": "scala",
-    "php": "php",
+    "cpp":"cpp","c++":"cpp","java":"java","python":"py","python3":"py",
+    "c":"c","c#":"cs","csharp":"cs","javascript":"js","ruby":"rb",
+    "swift":"swift","go":"go","rust":"rs","kotlin":"kt","scala":"scala",
+    "php":"php",
 }
 
 session = requests.Session()
 session.cookies.set("LEETCODE_SESSION", LEETCODE_SESSION, domain=".leetcode.com")
-session.headers.update({"User-Agent": "github-action-leetcode-sync/1.0", "Referer": "https://leetcode.com"})
+session.headers.update({"User-Agent":"github-action-leetcode-sync/1.0","Referer":"https://leetcode.com"})
 
 API_BASE = "https://leetcode.com/api/submissions/"
 
@@ -53,14 +44,14 @@ def run_git(args, env=None):
     full_env = os.environ.copy()
     if env:
         full_env.update(env)
-    proc = subprocess.run(["git"] + args, cwd=str(REPO_PATH), env=full_env, text=True,
-                          stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    if proc.returncode != 0:
-        print("Git command failed:", proc.returncode)
-        print("stdout:", proc.stdout)
-        print("stderr:", proc.stderr)
-        raise SystemExit(proc.returncode)
-    return proc.stdout.strip()
+    res = subprocess.run(["git"] + args, cwd=str(REPO_PATH), env=full_env,
+                         text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    if res.returncode != 0:
+        print("Git failed:", res.returncode)
+        print(res.stdout)
+        print(res.stderr)
+        raise SystemExit(res.returncode)
+    return res.stdout.strip()
 
 def load_state():
     if STATE_FILE.exists():
@@ -73,7 +64,7 @@ def load_state():
 def save_state(state):
     STATE_FILE.write_text(json.dumps(state, indent=2), encoding="utf-8")
 
-def safe_filename(s: str) -> str:
+def safe_filename(s):
     return "".join(c if c.isalnum() or c in "-_." else "_" for c in (s or ""))
 
 def fetch_all_submissions(limit=50, sleep_between=0.2):
@@ -135,7 +126,6 @@ def write_and_commit(sub):
         "GIT_AUTHOR_DATE": dt.strftime("%Y-%m-%dT%H:%M:%SZ"),
         "GIT_COMMITTER_DATE": dt.strftime("%Y-%m-%dT%H:%M:%SZ"),
     }
-
     run_git(["add", str(file_path)])
     run_git(["commit", "-m", commit_msg], env=env)
     print("Committed", file_path, "date", env["GIT_AUTHOR_DATE"])
@@ -149,18 +139,14 @@ def main():
     subs = fetch_all_submissions(limit=50, sleep_between=0.25)
     print("Total fetched:", len(subs))
 
-    # Commit oldest first so history is chronological
+    # oldest first so git history is chronological
     for sub in reversed(subs):
         sid = str(sub.get("id") or sub.get("submission_id") or "")
         if sid in processed:
             continue
         try:
             changed = write_and_commit(sub)
-            # mark processed even if we didn't create a file (to avoid repeat)
-            state.setdefault("processed_ids", {})[sid] = {
-                "title": sub.get("title"),
-                "ts": sub.get("timestamp") or sub.get("time")
-            }
+            state.setdefault("processed_ids", {})[sid] = {"title": sub.get("title"), "ts": sub.get("timestamp") or sub.get("time")}
             save_state(state)
             processed.add(sid)
         except Exception as e:
@@ -168,7 +154,7 @@ def main():
             save_state(state)
             raise
 
-    print("All done. Now pushing changes to branch:", BRANCH)
+    print("Pushing changes to branch:", BRANCH)
     try:
         run_git(["push", "origin", BRANCH])
         print("Push successful.")
