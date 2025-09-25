@@ -1,17 +1,23 @@
 #!/usr/bin/env python3
 """
-LeetCode sync with backdated commits credited to your GitHub account,
-and forced commits (--allow-empty) when FORCE_RECOMMIT=1.
+LeetCode → GitHub backdated sync (with placeholders for missing code)
 
-Behavior:
-- Lists ALL submissions via REST (paginated, auto-retry on 403)
-- Fetches full code via GraphQL submissionDetails
-- Keeps latest accepted per problem
-- Writes each problem to its own folder (slug/slug.ext)
-- Creates one backdated commit per problem (author set via env)
-- FORCE_RECOMMIT=1 will recreate commits even if file unchanged
-- Persists processed submission IDs to .leetcode_sync_state.json
-- Prints heatmap date for every commit in logs
+- Lists ALL submissions via REST (paginated; retries on 403)
+- Picks the LATEST Accepted submission per problem slug
+- Fetches code via GraphQL; if missing, writes a placeholder file
+- Commits are backdated via GIT_AUTHOR_DATE / GIT_COMMITTER_DATE (UTC)
+- Author AND Committer set from env (counts toward your heatmap)
+- FORCE_RECOMMIT=1 uses --allow-empty so you get a commit even if files are unchanged
+
+Env:
+  LEETCODE_SESSION   (required)
+  AUTHOR_NAME        (recommended)
+  AUTHOR_EMAIL       (recommended; must be verified on your GH acct)
+  REPO_PATH          (default: current working dir)
+  BRANCH             (default: main)
+  FORCE_RECOMMIT     ("1" or "0"; default "1" the first time you backfill)
+  PLACEHOLDER_ON_MISSING ("1" to create placeholder commits; default "1")
+  PLACEHOLDER_EXT    (default "md")
 """
 
 import os, sys, time, json, requests, subprocess, hashlib
@@ -22,30 +28,31 @@ from datetime import datetime, timezone
 LEETCODE_SESSION = os.environ.get("LEETCODE_SESSION")
 REPO_PATH = Path(os.environ.get("REPO_PATH", os.getcwd()))
 BRANCH = os.environ.get("BRANCH", "main")
+
+AUTHOR_NAME = os.environ.get("AUTHOR_NAME") or os.environ.get("GITHUB_ACTOR") or "leetcode-sync"
+AUTHOR_EMAIL = os.environ.get("AUTHOR_EMAIL") or (os.environ.get("GITHUB_ACTOR","") + "@users.noreply.github.com")
+
+FORCE_RECOMMIT = os.environ.get("FORCE_RECOMMIT", "0") == "1"
+PLACEHOLDER_ON_MISSING = os.environ.get("PLACEHOLDER_ON_MISSING", "1") == "1"
+PLACEHOLDER_EXT = (os.environ.get("PLACEHOLDER_EXT") or "md").lstrip(".").lower()
+
 STATE_FILE = REPO_PATH / ".leetcode_sync_state.json"
 
-AUTHOR_NAME = os.environ.get("AUTHOR_NAME") or os.environ.get("GITHUB_ACTOR") or "LeetCode Sync"
-AUTHOR_EMAIL = os.environ.get("AUTHOR_EMAIL") or (os.environ.get("GITHUB_ACTOR", "") + "@users.noreply.github.com")
-FORCE_RECOMMIT = os.environ.get("FORCE_RECOMMIT", "0") == "1"
-
 if not LEETCODE_SESSION:
-    print("ERROR: LEETCODE_SESSION not set. Exiting.")
-    sys.exit(1)
-
+    print("ERROR: LEETCODE_SESSION not set"); sys.exit(1)
 if not (REPO_PATH.exists() and (REPO_PATH / ".git").exists()):
-    print(f"ERROR: {REPO_PATH} is not a git repo.")
-    sys.exit(1)
+    print("ERROR: repo not initialized as a git repository"); sys.exit(1)
 
 EXT_MAP = {
     "cpp":"cpp","c++":"cpp","java":"java","python":"py","python3":"py",
     "c":"c","c#":"cs","csharp":"cs","javascript":"js","typescript":"ts",
     "ruby":"rb","swift":"swift","go":"go","rust":"rs","kotlin":"kt",
-    "scala":"scala","php":"php"
+    "scala":"scala","php":"php","sql":"sql"
 }
 
 session = requests.Session()
 session.cookies.set("LEETCODE_SESSION", LEETCODE_SESSION, domain=".leetcode.com")
-session.headers.update({"User-Agent":"leetcode-sync-script/1.0","Referer":"https://leetcode.com"})
+session.headers.update({"User-Agent":"leetcode-sync/2.0","Referer":"https://leetcode.com"})
 
 # ---------- Helpers ----------
 def run_git(args, env=None):
@@ -59,7 +66,18 @@ def run_git(args, env=None):
         raise SystemExit(res.returncode)
     return res.stdout.strip()
 
-def safe_filename(s): return "".join(c if c.isalnum() or c in "-_." else "_" for c in (s or ""))
+def safe_filename(s):
+    return "".join(c if c.isalnum() or c in "-_." else "_" for c in (s or ""))
+
+def sha1_text(text):
+    import hashlib
+    h=hashlib.sha1(); h.update(text.encode("utf-8")); return h.hexdigest()
+
+def file_same(path: Path, text: str) -> bool:
+    if not path.exists(): return False
+    try: existing = path.read_text(encoding="utf-8")
+    except: return False
+    return sha1_text(existing) == sha1_text(text)
 
 def to_int_ts(x):
     if x is None: return 0
@@ -67,17 +85,6 @@ def to_int_ts(x):
     except:
         try: return int(float(str(x)))
         except: return 0
-
-def file_sha1_text(text):
-    h = hashlib.sha1(); h.update(text.encode("utf-8")); return h.hexdigest()
-
-def file_exists_and_same(path: Path, text: str) -> bool:
-    if not path.exists(): return False
-    try:
-        existing = path.read_text(encoding="utf-8")
-    except Exception:
-        return False
-    return file_sha1_text(existing) == file_sha1_text(text)
 
 def load_state():
     if STATE_FILE.exists():
@@ -88,13 +95,12 @@ def load_state():
 def save_state(state):
     STATE_FILE.write_text(json.dumps(state, indent=2), encoding="utf-8")
 
-# ---------- REST listing (with resume / 403 retry) ----------
+# ---------- REST listing (all pages; retry 403) ----------
 def fetch_all_submissions_rest(limit=20, max_retries=6, sleep_between=0.25):
-    subs = []
-    offset = 0
+    subs, offset = [], 0
     while True:
         url = f"https://leetcode.com/api/submissions/?offset={offset}&limit={limit}"
-        for attempt in range(1, max_retries + 1):
+        for attempt in range(1, max_retries+1):
             try:
                 r = session.get(url, timeout=30)
                 if r.status_code == 200:
@@ -119,7 +125,7 @@ def fetch_all_submissions_rest(limit=20, max_retries=6, sleep_between=0.25):
                     time.sleep(wait)
             except Exception as e:
                 wait = attempt * 5
-                print(f"REST error at offset {offset}: {e}, retry {attempt}/{max_retries} in {wait}s...")
+                print(f"REST error at offset {offset}: {e}, retry in {wait}s...")
                 time.sleep(wait)
         else:
             print(f"REST: failed after {max_retries} retries at offset={offset}, stopping.")
@@ -137,9 +143,11 @@ def graphql_post(query, variables, max_retries=3):
     }
     if csrftoken:
         headers["X-CSRFToken"] = csrftoken
-    for attempt in range(1, max_retries + 1):
+    for attempt in range(1, max_retries+1):
         try:
-            r = session.post("https://leetcode.com/graphql", json={"query": query, "variables": variables}, headers=headers, timeout=30)
+            r = session.post("https://leetcode.com/graphql",
+                             json={"query":query,"variables":variables},
+                             headers=headers, timeout=30)
             if r.status_code == 200:
                 return r.json()
             print("GraphQL status:", r.status_code, r.text[:300])
@@ -157,15 +165,11 @@ def fetch_submission_code_graphql(sub_id):
         lang { name }
         timestamp
       }
-    }
-    """
-    try:
-        sid = int(sub_id)
-    except Exception:
-        return None
+    }"""
+    try: sid = int(sub_id)
+    except: return None
     body = graphql_post(gql, {"submissionId": sid})
-    if not body:
-        return None
+    if not body: return None
     details = body.get("data", {}).get("submissionDetails", {})
     if details:
         if isinstance(details.get("lang"), dict):
@@ -182,10 +186,9 @@ def main():
     all_subs = fetch_all_submissions_rest(limit=20)
     print("Total submissions fetched:", len(all_subs))
     if not all_subs:
-        print("No submissions found, exiting.")
-        return
+        print("No submissions found."); return
 
-    # build latest accepted per problem
+    # latest AC per slug
     latest = {}
     for s in all_subs:
         status = (s.get("status_display") or s.get("status") or s.get("statusDisplay") or "").lower()
@@ -202,52 +205,66 @@ def main():
                 "title": s.get("title") or slug,
                 "titleSlug": slug,
                 "timestamp": ts,
-                "lang_name": s.get("lang") or s.get("language") or ""
+                "lang_name": (s.get("lang") or s.get("language") or "")
             }
 
     print("Problems solved (unique):", len(latest))
-
     created = 0
+
     for slug, meta in latest.items():
         sid = meta.get("id")
-        if not sid:
-            continue
+        ts = to_int_ts(meta.get("timestamp"))
+        if not sid or ts == 0:
+            print(f"Skip {slug} — missing id/timestamp"); continue
 
+        # Try GraphQL for code
         details = fetch_submission_code_graphql(sid)
-        if not details or not details.get("code"):
-            continue
+        code = None
+        lang = (meta.get("lang_name") or "").lower()
 
-        code = details["code"]
-        lang = (details.get("lang") or meta.get("lang_name") or "").lower()
-        ext = EXT_MAP.get(lang, "txt")
-        ts = to_int_ts(details.get("timestamp") or meta.get("timestamp"))
-        if ts == 0:
-            continue
+        if details and details.get("code"):
+            code = details["code"]
+            lang = (details.get("lang") or lang or "").lower()
+            ts = to_int_ts(details.get("timestamp") or ts)
 
         dt = datetime.fromtimestamp(ts, tz=timezone.utc)
         iso = dt.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+        # Decide filename/ext
+        ext = EXT_MAP.get(lang, None)
+        if not ext:
+            ext = PLACEHOLDER_EXT if (code is None and PLACEHOLDER_ON_MISSING) else "txt"
 
         folder = REPO_PATH / safe_filename(slug)
         folder.mkdir(parents=True, exist_ok=True)
         file_path = folder / f"{safe_filename(slug)}.{ext}"
 
-        new_content = (
-            f"// LeetCode: {meta.get('title')} ({slug})\n"
-            f"// Submission ID: {sid}\n"
-            f"// Language: {lang}\n"
-            f"// Timestamp (UTC): {iso}\n\n"
-            f"{code}"
-        )
+        if code is None:
+            if not PLACEHOLDER_ON_MISSING:
+                print(f"No code for {slug} (submission {sid}) — skipping (placeholders disabled)")
+                continue
+            # Placeholder content
+            content = (
+                f"# Placeholder for {meta.get('title')} ({slug})\n\n"
+                f"- **Submission ID:** {sid}\n"
+                f"- **Original solve time (UTC):** {iso}\n"
+                f"- **Note:** LeetCode API did not return code for this submission.\n"
+                f"  This placeholder ensures a backdated commit for your contribution graph.\n"
+            )
+            commit_msg = f"LeetCode: {meta.get('title')} ({slug}) — placeholder (solved on {iso})"
+            print(f"Creating placeholder for {slug} (no code) — will backdate to {iso}")
+        else:
+            content = (
+                f"// LeetCode: {meta.get('title')} ({slug})\n"
+                f"// Submission ID: {sid}\n"
+                f"// Language: {lang}\n"
+                f"// Timestamp (UTC): {iso}\n\n"
+                f"{code}"
+            )
+            commit_msg = f"LeetCode: {meta.get('title')} ({slug}) — solved on {iso}"
 
-        if not FORCE_RECOMMIT and file_exists_and_same(file_path, new_content):
-            processed_ids.add(str(sid))
-            state["processed_ids"] = list(processed_ids)
-            save_state(state)
-            continue
-
-        # Write file
-        file_path.write_text(new_content, encoding="utf-8")
-
+        # Write file and commit
+        file_path.write_text(content, encoding="utf-8")
         run_git(["add", str(file_path)])
 
         env = {
@@ -259,15 +276,15 @@ def main():
             "GIT_COMMITTER_EMAIL": AUTHOR_EMAIL
         }
 
-        commit_msg = f"LeetCode: {meta.get('title')} ({slug}) — solved on {iso}"
-
         if FORCE_RECOMMIT:
-            # Force commit even if identical (heatmap backfill)
             run_git(["commit", "--allow-empty", "-m", commit_msg], env=env)
-            print(f"Forced commit for {slug} at {iso} (heatmap date)")
+            print(f"Backdated commit for {slug} → {iso} (author: {AUTHOR_NAME} <{AUTHOR_EMAIL}>)")
         else:
-            run_git(["commit", "-m", commit_msg], env=env)
-            print(f"Committed {slug} at {iso}")
+            if not file_same(file_path, content):
+                run_git(["commit", "-m", commit_msg], env=env)
+                print(f"Committed {slug} at {iso}")
+            else:
+                print(f"No change for {slug}, skipping commit")
 
         created += 1
         processed_ids.add(str(sid))
