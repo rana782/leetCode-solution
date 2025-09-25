@@ -1,7 +1,7 @@
 name: LeetCode Sync
 
 on:
-  workflow_dispatch: {}
+  workflow_dispatch: {}   # allows manual trigger
 
 permissions:
   contents: write
@@ -30,20 +30,16 @@ jobs:
           git config user.name "${{ github.actor }}"
           git config user.email "${{ secrets.MY_GH_EMAIL }}"
 
-     - name: Run sync script (force backfill, credited to you)
-  env:
-    LEETCODE_SESSION: ${{ secrets.LEETCODE_SESSION }}
-    AUTHOR_NAME: ${{ github.actor }}
-    AUTHOR_EMAIL: ${{ secrets.MY_GH_EMAIL }}    # your verified email secret
-    FORCE_RECOMMIT: "1"                         # creates backfill commits even if unchanged
-    REPO_PATH: ${{ github.workspace }}
-    BRANCH: main
-  run: |
-    # ensure git uses your identity for the committer
-    git config user.name "${{ github.actor }}"
-    git config user.email "${{ secrets.MY_GH_EMAIL }}"
-    python leetcode_sync.py
+      - name: Run sync script (force backfill, credited to you)
+        env:
+          LEETCODE_SESSION: ${{ secrets.LEETCODE_SESSION }}
+          AUTHOR_NAME: ${{ github.actor }}
+          AUTHOR_EMAIL: ${{ secrets.MY_GH_EMAIL }}
+          FORCE_RECOMMIT: "1"                # backfill forced commits
+          REPO_PATH: ${{ github.workspace }}
+          BRANCH: main
+        run: python leetcode_sync.py
 
-      - name: Show commit history
+      - name: Show last 20 commits (debug)
         run: |
           git --no-pager log -n 20 --pretty=format:"%h | %an <%ae> | %ad | %s"
