@@ -69,12 +69,42 @@ def safe_filename(s):
 
 def fetch_all_submissions(limit=200, sleep_between=0.25, max_retries=3):
     """
-    Fetch all submissions using LeetCode GraphQL submissionList (preferred).
-    - limit: page size (200 is safe; increase if needed)
-    - If GraphQL fails or returns nothing, fall back to REST API.
+    GraphQL-first fetch with proper CSRF handling. Falls back to REST if GraphQL unavailable.
+    - limit: page size for each request (200 default; increase to 500/1000 if desired)
     """
+    # Ensure we have fresh site cookies (and csrftoken)
+    try:
+        # hit main page to populate csrf cookie
+        session.get("https://leetcode.com", timeout=20)
+    except Exception as e:
+        print("Warning: initial GET to leetcode.com failed:", e)
+
+    # extract csrf token if present
+    csrftoken = session.cookies.get("csrftoken") or session.cookies.get("csrf-token") or session.cookies.get("CSRFToken")
+    if csrftoken:
+        print("Found csrftoken in cookies.")
+    else:
+        print("No csrftoken cookie found; we will still try GraphQL but may fail and fall back to REST.")
+
+    # GraphQL query for submissionList
+    gql = """
+    query submissionList($offset: Int!, $limit: Int!) {
+      submissionList(offset: $offset, limit: $limit) {
+        submissions {
+          id
+          title
+          titleSlug
+          statusDisplay
+          lang
+          timestamp
+          code
+        }
+        hasNext
+      }
+    }
+    """
+
     def fetch_rest(limit, sleep_between, max_retries):
-        # fallback: original REST fetch (keeps same behavior)
         subs = []
         offset = 0
         while True:
@@ -104,33 +134,23 @@ def fetch_all_submissions(limit=200, sleep_between=0.25, max_retries=3):
             time.sleep(sleep_between)
         return subs
 
-    # GraphQL query for submissionList
-    gql = """
-    query submissionList($offset: Int!, $limit: Int!) {
-      submissionList(offset: $offset, limit: $limit) {
-        submissions {
-          id
-          title
-          titleSlug
-          statusDisplay
-          lang
-          timestamp
-          code
-        }
-        hasNext
-      }
-    }
-    """
-
+    # Try GraphQL with CSRF header
     subs = []
     offset = 0
+    headers = {
+        "Referer": "https://leetcode.com",
+        "X-Requested-With": "XMLHttpRequest",
+        "User-Agent": session.headers.get("User-Agent", "leetcode-sync"),
+    }
+    if csrftoken:
+        headers["X-CSRFToken"] = csrftoken
+
     while True:
         payload = {"query": gql, "variables": {"offset": offset, "limit": limit}}
-        # retry logic
         r = None
         for attempt in range(1, max_retries + 1):
             try:
-                r = session.post("https://leetcode.com/graphql", json=payload, timeout=30)
+                r = session.post("https://leetcode.com/graphql", json=payload, timeout=30, headers=headers)
                 break
             except Exception as e:
                 print(f"GraphQL request failed (attempt {attempt}/{max_retries}):", e)
@@ -139,8 +159,17 @@ def fetch_all_submissions(limit=200, sleep_between=0.25, max_retries=3):
                     return fetch_rest(limit=limit, sleep_between=sleep_between, max_retries=max_retries)
                 time.sleep(attempt * 0.8)
 
-        if r is None or r.status_code != 200:
-            print("GraphQL: non-200 response; falling back to REST. status:", getattr(r, "status_code", None))
+        if r is None:
+            print("GraphQL: no response object; falling back to REST.")
+            return fetch_rest(limit=limit, sleep_between=sleep_between, max_retries=max_retries)
+
+        # If 4xx/5xx, show snippet and fall back to REST
+        if r.status_code != 200:
+            print("GraphQL: non-200 response; falling back to REST. status:", r.status_code)
+            try:
+                print("GraphQL response snippet:", r.text[:400])
+            except Exception:
+                pass
             return fetch_rest(limit=limit, sleep_between=sleep_between, max_retries=max_retries)
 
         body = r.json()
@@ -150,16 +179,18 @@ def fetch_all_submissions(limit=200, sleep_between=0.25, max_retries=3):
         except Exception:
             batch = None
 
-        # if GraphQL returns nothing, fallback to REST
         if not batch:
-            print("GraphQL: no submissions in response; falling back to REST.")
+            # if GraphQL returned errors field, print and fallback
+            if body.get("errors"):
+                print("GraphQL returned errors; falling back to REST. errors:", body.get("errors"))
+            else:
+                print("GraphQL: no submissions in response; falling back to REST.")
             return fetch_rest(limit=limit, sleep_between=sleep_between, max_retries=max_retries)
 
         subs.extend(batch)
         print(f"GraphQL: Fetched page: offset={offset}, returned={len(batch)}")
 
         has_next = body.get("data", {}).get("submissionList", {}).get("hasNext")
-        # stop if server signals no next or less than limit returned
         if has_next is False or len(batch) < limit:
             break
 
@@ -167,6 +198,7 @@ def fetch_all_submissions(limit=200, sleep_between=0.25, max_retries=3):
         time.sleep(sleep_between)
 
     return subs
+
 
 
 
