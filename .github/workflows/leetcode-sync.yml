@@ -1,7 +1,10 @@
-name: LeetCode Sync (robust)
+name: LeetCode Sync (backdated, credited)
 
+# manual trigger + daily scheduled (adjust cron if you like)
 on:
   workflow_dispatch: {}
+  schedule:
+    - cron: "0 2 * * *"   # daily at 02:00 UTC
 
 permissions:
   contents: write
@@ -9,31 +12,38 @@ permissions:
 jobs:
   sync:
     runs-on: ubuntu-latest
+    timeout-minutes: 360
+
     steps:
-      - name: Checkout repo
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
           persist-credentials: true
 
-      - name: Set up Python
+      - name: Set up Python 3.11
         uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
+          python-version: "3.11"
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install requests
 
-      - name: Configure git user
+      - name: Configure git user (for safety)
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: Run leetcode sync
+      - name: Run LeetCode sync (backdate commits, credited to you)
         env:
           LEETCODE_SESSION: ${{ secrets.LEETCODE_SESSION }}
           REPO_PATH: ${{ github.workspace }}
           BRANCH: main
+          # Author info so commits count for your account:
+          AUTHOR_NAME: ${{ github.actor }}
+          AUTHOR_EMAIL: ${{ github.actor }}@users.noreply.github.com
+          # Set to "1" to recreate commits even if file unchanged (use carefully)
+          FORCE_RECOMMIT: "1"
         run: |
           python leetcode_sync.py
