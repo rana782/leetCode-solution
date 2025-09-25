@@ -6,6 +6,7 @@ leetcode_sync.py (latest-only, backdated commits, per-problem folders)
 - Keeps only latest accepted submission per problem
 - Each problem stored in its own folder (e.g. two-sum/two-sum.java)
 - One commit per problem, backdated to original solve time
+- Robustly handles timestamp types (always uses ints for comparisons)
 """
 
 import os, sys, time, requests, subprocess
@@ -54,6 +55,19 @@ def run_git(args, env=None):
 def safe_filename(s):
     return "".join(c if c.isalnum() or c in "-_." else "_" for c in (s or ""))
 
+def to_int_ts(x):
+    """Normalize timestamp-like values to int (seconds). Return 0 on failure."""
+    if x is None:
+        return 0
+    try:
+        return int(x)
+    except Exception:
+        try:
+            # sometimes it's numeric string with decimals
+            return int(float(str(x)))
+        except Exception:
+            return 0
+
 # -------------------- GraphQL --------------------
 
 def graphql_query(query, variables, max_retries=3):
@@ -77,7 +91,7 @@ def graphql_query(query, variables, max_retries=3):
                              headers=headers, timeout=30)
             if r.status_code == 200:
                 return r.json()
-            print("GraphQL status:", r.status_code, r.text[:200])
+            print("GraphQL status:", r.status_code, r.text[:300])
         except Exception as e:
             print("GraphQL error:", e)
         time.sleep(attempt)
@@ -108,8 +122,10 @@ def fetch_all_submissions(limit=50):
             break
         data = body.get("data", {}).get("submissionList", {})
         batch = data.get("submissions") or []
+        # normalize timestamp and lang into canonical fields
         for item in batch:
-            item["lang_name"] = item.get("lang") or ""
+            item["timestamp"] = to_int_ts(item.get("timestamp") or item.get("time"))
+            item["lang_name"] = (item.get("lang") or "")  # already string in current schema
         subs.extend(batch)
         print(f"GraphQL: offset={offset}, got {len(batch)} submissions")
         if not data.get("hasNext") or len(batch) < limit:
@@ -138,7 +154,10 @@ def fetch_submission_code(sub_id):
     body = graphql_query(gql, {"submissionId": sid})
     if not body:
         return None
-    return body.get("data", {}).get("submissionDetails", {})
+    details = body.get("data", {}).get("submissionDetails", {})
+    if details:
+        details["timestamp"] = to_int_ts(details.get("timestamp") or details.get("time"))
+    return details
 
 # -------------------- Main --------------------
 
@@ -147,18 +166,22 @@ def main():
     subs = fetch_all_submissions(limit=50)
     print("Total submissions fetched:", len(subs))
 
-    # keep only latest accepted per problem
+    # keep only latest accepted per problem (timestamps normalized to int)
     latest = {}
     for sub in subs:
         status = (sub.get("statusDisplay") or "").lower()
         if "accepted" not in status and not status.startswith("ac"):
             continue
         slug = sub.get("titleSlug") or sub.get("title")
-        ts = int(sub.get("timestamp") or 0)
-        if not slug or not ts:
+        ts = to_int_ts(sub.get("timestamp"))
+        if not slug or ts == 0:
             continue
-        if slug not in latest or ts > latest[slug].get("timestamp", 0):
-            latest[slug] = sub
+        prev = latest.get(slug)
+        if (prev is None) or (ts > to_int_ts(prev.get("timestamp"))):
+            # store timestamp as int for safety
+            sub_copy = dict(sub)
+            sub_copy["timestamp"] = ts
+            latest[slug] = sub_copy
 
     print("Problems solved:", len(latest))
 
@@ -170,11 +193,13 @@ def main():
             continue
 
         code = details["code"]
+        # prefer details.lang if present, otherwise metadata lang_name
         lang = (details.get("lang") or sub.get("lang_name") or "").lower()
         ext = EXT_MAP.get(lang, "txt")
-        ts = int(details.get("timestamp") or sub.get("timestamp") or 0)
+        ts = to_int_ts(details.get("timestamp") or sub.get("timestamp"))
 
-        if not ts:
+        if ts == 0:
+            print("Skipping", slug, "because timestamp missing")
             continue
 
         dt = datetime.fromtimestamp(ts, tz=timezone.utc)
@@ -184,6 +209,7 @@ def main():
         folder.mkdir(parents=True, exist_ok=True)
         file_path = folder / f"{safe_filename(slug)}.{ext}"
 
+        # write file (always overwrite for latest-only)
         with open(file_path, "w", encoding="utf-8") as f:
             f.write(f"// LeetCode: {sub.get('title')} ({slug})\n")
             f.write(f"// Submission ID: {sub.get('id')}\n")
