@@ -34,6 +34,6 @@ jobs:
         env:
           LEETCODE_SESSION: ${{ secrets.LEETCODE_SESSION }}
           REPO_PATH: ${{ github.workspace }}
-          BRANCH: ${{ github.ref_name }}
+          BRANCH: main
         run: |
           python leetcode_sync.py
