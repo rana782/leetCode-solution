@@ -1,0 +1,37 @@
+name: Find bot-like commits (safe dry-run)
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  find-bot:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout full repo (all history)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Create backup branch (safe)
+        run: |
+          ts=$(date -u +"%Y%m%dT%H%M%SZ")
+          backup="pre-check-backup-$ts"
+          git checkout -b "$backup"
+          git push origin "$backup"
+          echo "Created backup branch: $backup"
+
+      - name: Show commits that look like bot-authored (sample)
+        run: |
+          echo "Listing commits where author/committer mention github-actions or users.noreply (sample):"
+          git log --all --pretty=format:'%h | %an | %ae | %cn | %ce | %ad | %s' \
+            | grep -Ei "github-actions|users.noreply" || true
+          echo
+          echo "---- End of sample ----"
+
+      - name: Show last 30 commits (for context)
+        run: |
+          echo "Last 30 commits:"
+          git --no-pager log -n 30 --pretty=format:'%h | %an <%ae> | %ad | %s'
