@@ -1,4 +1,4 @@
-name: Rewrite commit authors (safe env-filter)
+name: Rewrite commit authors (final safe)
 
 on:
   workflow_dispatch:
@@ -34,10 +34,11 @@ jobs:
       - name: Dry-run: show candidate bot commits (sample)
         run: |
           echo "Showing commits that likely use bot identities (sample):"
-          git log --all --pretty=format:"%h | %an | %ae | %cn | %ce | %ad | %s" \
-            | grep -Ei 'github-actions|users.noreply' || true
+          git log --all --pretty=format:'%h | %an | %ae | %cn | %ce | %ad | %s' \
+            | grep -Ei "github-actions|users.noreply" || true
           echo
           echo "If you see matches above, those are candidates to be re-attributed."
+
       - name: Prepare env-filter script
         run: |
           cat > env-filter.sh <<'ENV'
@@ -77,5 +78,4 @@ ENV
       - name: Show last 30 commits (verification)
         run: |
           echo "Last 30 commits (newest first):"
-          git --no-pager log -n 30 --pretty=format:"%h | %an <%ae> | %ad | %s"
-
+          git --no-pager log -n 30 --pretty=format:'%h | %an <%ae> | %ad | %s'
