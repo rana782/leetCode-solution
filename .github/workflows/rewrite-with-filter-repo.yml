@@ -1,10 +1,10 @@
-name: Rewrite commit authors with git-filter-repo
+name: Rewrite commit authors (shell env-filter)
 
 on:
   workflow_dispatch:
     inputs:
       do_rewrite:
-        description: 'Set to "yes" to perform the rewrite and force-push. Default is "no" (dry-run).'
+        description: 'Set to "yes" to perform the rewrite and force-push. Default "no" -> dry-run.'
         required: true
         default: "no"
 
@@ -14,95 +14,69 @@ permissions:
 jobs:
   rewrite:
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 90
     steps:
-      - name: Checkout full repository (fetch all history)
+      - name: Checkout full repo (all history)
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Install git-filter-repo
-        run: |
-          python -m pip install --upgrade pip
-          pip install --upgrade git-filter-repo
-
-      - name: Create backup branch (safe backup before rewrite)
+      - name: Create backup branch (safe)
         id: backup
         run: |
           ts=$(date -u +"%Y%m%dT%H%M%SZ")
-          backup_branch="pre-rewrite-backup-$ts"
-          git checkout -b "$backup_branch"
-          git push origin "$backup_branch"
-          echo "backup_branch=$backup_branch" >> $GITHUB_OUTPUT
-          echo "Created backup branch: $backup_branch"
+          backup="pre-rewrite-backup-$ts"
+          git checkout -b "$backup"
+          git push origin "$backup"
+          echo "backup_branch=$backup" >> $GITHUB_OUTPUT
+          echo "Created backup branch: $backup"
 
-      - name: Dry-run: show commits authored/committed by likely bot patterns (sample)
+      - name: Dry-run: show commits that look like bot-authored (sample)
         run: |
-          echo "Searching for commits with bot-like author/committer identities (sample)..."
+          echo "Showing commits with 'github-actions' or 'users.noreply' in author/committer (sample):"
           git log --all --pretty=format:"%h | %an | %ae | %cn | %ce | %ad | %s" \
-            | grep -Ei 'github-actions|github-actions@users.noreply' || true
+            | grep -Ei 'github-actions|users.noreply' || true
           echo
-          echo "If you see bot entries above, these are the candidates that will be re-attributed."
+          echo "If you see lines above, those commits are candidates to be re-attributed."
 
-      - name: Write commit-callback script file
-        run: |
-          cat > commit_callback.py <<'PY'
-def commit_callback(commit):
-    import re, os
-    # patterns that indicate GitHub Actions bot identities (expand if needed)
-    bot_patterns = [
-        re.compile(r"github-actions\\[bot\\]", re.I),
-        re.compile(r"41898282\\+github-actions\\[bot\\]", re.I),
-        re.compile(r"github-actions@users.noreply.github.com", re.I),
-        re.compile(r"github-actions\\[bot\\]@users.noreply.github.com", re.I),
-    ]
-    def is_bot_field(name_bytes, email_bytes):
-        try:
-            name = (name_bytes or b'').decode('utf-8', 'ignore')
-            email = (email_bytes or b'').decode('utf-8', 'ignore')
-        except:
-            name = ''
-            email = ''
-        for p in bot_patterns:
-            if p.search(name) or p.search(email):
-                return True
-        return False
-
-    if is_bot_field(commit.author_name, commit.author_email) or is_bot_field(commit.committer_name, commit.committer_email):
-        new_name = os.environ.get('NEW_NAME', '').encode('utf-8')
-        new_email = os.environ.get('NEW_EMAIL', '').encode('utf-8')
-        if new_name and new_email:
-            commit.author_name = new_name
-            commit.author_email = new_email
-            commit.committer_name = new_name
-            commit.committer_email = new_email
-PY
-
-      - name: Show commit-callback preview
-        run: |
-          echo "commit_callback.py written. Showing first 80 characters:"
-          head -n 40 commit_callback.py | sed -n '1,40p'
-
-      - name: Perform rewrite (only when do_rewrite == yes)
+      - name: Perform rewrite (only if do_rewrite == yes)
         if: ${{ github.event.inputs.do_rewrite == 'yes' }}
         env:
           NEW_NAME: ${{ github.actor }}
           NEW_EMAIL: ${{ secrets.MY_GH_EMAIL }}
         run: |
           set -e
-          echo "Starting history rewrite: replacing bot author/committer with $NEW_NAME <$NEW_EMAIL>"
+          echo "Rewriting history: replacing bot identities with $NEW_NAME <$NEW_EMAIL>"
           git fetch --all
-          git filter-repo --force --replace-refs delete-no-add --commit-callback-file commit_callback.py
-          echo "Rewrite completed. Force-pushing rewritten branches/tags to origin..."
+
+          # Create an env-filter script that checks if author/committer match bot patterns,
+          # and if so, set the author/committer to the NEW_NAME/NEW_EMAIL
+          cat > env-filter.sh <<'SH'
+#!/bin/sh
+case "$(printf '%s' "$GIT_AUTHOR_NAME:$GIT_AUTHOR_EMAIL:$GIT_COMMITTER_NAME:$GIT_COMMITTER_EMAIL")" in
+  *github-actions*|*users.noreply.github.com*)
+    export GIT_AUTHOR_NAME="$NEW_NAME"
+    export GIT_AUTHOR_EMAIL="$NEW_EMAIL"
+    export GIT_COMMITTER_NAME="$NEW_NAME"
+    export GIT_COMMITTER_EMAIL="$NEW_EMAIL"
+    ;;
+esac
+SH
+          chmod +x env-filter.sh
+
+          # Run filter-branch (this will rewrite history where env-filter changes environment)
+          git filter-branch --env-filter 'sh env-filter.sh' -- --all
+
+          echo "Rewrite finished. Force-pushing rewritten branches and tags to origin..."
           git push --force --tags origin 'refs/heads/*'
           echo "Force-push done."
 
-      - name: Dry-run notice (when not rewriting)
+      - name: Notice (dry-run)
         if: ${{ github.event.inputs.do_rewrite != 'yes' }}
         run: |
-          echo "Dry-run complete. No history was rewritten. To perform the rewrite, re-run this workflow and set 'do_rewrite' to 'yes'."
+          echo "Dry-run finished. No rewrite was performed. To rewrite history, re-run this workflow and set do_rewrite to 'yes'."
 
-      - name: Show last 30 commits (post-action)
+      - name: Show last 30 commits (for verification)
         run: |
           echo "Last 30 commits (newest first):"
           git --no-pager log -n 30 --pretty=format:"%h | %an <%ae> | %ad | %s"
