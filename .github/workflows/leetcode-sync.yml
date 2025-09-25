@@ -21,7 +21,9 @@ jobs:
           python-version: '3.11'
 
       - name: Install dependencies
-        run: python -m pip install --upgrade pip && pip install requests
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests
 
       - name: Configure git user
         run: |
@@ -99,7 +101,7 @@ def save_state(state):
     STATE_FILE.write_text(json.dumps(state, indent=2), encoding="utf-8")
 
 def safe_filename(s):
-    return "".join(c if c.isalnum() or c in "-." else "" for c in s)
+    return "".join(c if c.isalnum() or c in "-_." else "_" for c in s)
 
 def fetch_all_submissions(limit=50, sleep_between=0.2):
     subs = []
@@ -142,7 +144,7 @@ def write_and_commit(sub):
     dt = datetime.fromtimestamp(ts, tz=timezone.utc)
     iso = dt.strftime("%Y-%m-%dT%H-%M-%SZ")
     sub_id = sub.get("id") or sub.get("submission_id") or ""
-    filename = f"{iso}{sub_id}{lang}.{ext}"
+    filename = f"{iso}_{sub_id}_{lang}.{ext}"
     file_path = prob_dir / filename
 
     if file_path.exists():
@@ -212,7 +214,7 @@ def main():
     except Exception as e:
         print("Push failed:", e)
 
-if _name_ == "_main_":
+if __name__ == "__main__":
     main()
 PY
 
