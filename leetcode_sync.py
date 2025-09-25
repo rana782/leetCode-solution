@@ -1,15 +1,17 @@
 #!/usr/bin/env python3
 """
 leetcode_sync.py
-- Fetch ALL LeetCode submissions via GraphQL
-- Keep only latest accepted per problem
+- Fetch ALL LeetCode submissions via GraphQL (uses larger page size)
+- Keep latest accepted per problem
 - Save each in its own folder (slug/slug.ext)
-- Commit one per problem, backdated to original submission time
+- One commit per problem, backdated to original submission time
+- Skip commit if file already exists with identical content (idempotent)
 """
 
 import os, sys, time, requests, subprocess
 from pathlib import Path
 from datetime import datetime, timezone
+import hashlib
 
 # -------------------- Config --------------------
 
@@ -65,6 +67,20 @@ def to_int_ts(x):
         except Exception:
             return 0
 
+def file_sha1_text(text):
+    h = hashlib.sha1()
+    h.update(text.encode("utf-8"))
+    return h.hexdigest()
+
+def file_exists_and_same(path: Path, text: str) -> bool:
+    if not path.exists():
+        return False
+    try:
+        existing = path.read_text(encoding="utf-8")
+    except Exception:
+        return False
+    return file_sha1_text(existing) == file_sha1_text(text)
+
 # -------------------- GraphQL --------------------
 
 def graphql_query(query, variables, max_retries=3):
@@ -94,8 +110,12 @@ def graphql_query(query, variables, max_retries=3):
         time.sleep(attempt)
     return None
 
-def fetch_all_submissions(limit=50):
-    """Fetch metadata for ALL submissions (submissionList: lang is String)."""
+def fetch_all_submissions(limit=1000):
+    """
+    Fetch metadata for ALL submissions.
+    Uses a large default limit to request many items per page.
+    (If server limits it, pagination still continues.)
+    """
     gql = """
     query submissionList($offset:Int!,$limit:Int!){
       submissionList(offset:$offset,limit:$limit){
@@ -131,7 +151,7 @@ def fetch_all_submissions(limit=50):
     return subs
 
 def fetch_submission_code(sub_id):
-    """Fetch full code for a single submission (submissionDetails: lang is LanguageNode)."""
+    """Fetch full code for a single submission (lang is LanguageNode)."""
     gql = """
     query submissionDetails($submissionId:Int!){
       submissionDetails(submissionId:$submissionId){
@@ -161,7 +181,7 @@ def fetch_submission_code(sub_id):
 
 def main():
     print("Fetching metadata...")
-    subs = fetch_all_submissions(limit=50)
+    subs = fetch_all_submissions(limit=1000)  # large page size
     print("Total submissions fetched:", len(subs))
 
     # keep only latest accepted per problem
@@ -180,7 +200,7 @@ def main():
             sub_copy["timestamp"] = ts
             latest[slug] = sub_copy
 
-    print("Problems solved:", len(latest))
+    print("Problems solved (unique):", len(latest))
 
     created = 0
     for slug, sub in latest.items():
@@ -194,6 +214,7 @@ def main():
         ext = EXT_MAP.get(lang, "txt")
         ts = to_int_ts(details.get("timestamp") or sub.get("timestamp"))
         if ts == 0:
+            print("Skipping", slug, "because timestamp missing")
             continue
 
         dt = datetime.fromtimestamp(ts, tz=timezone.utc)
@@ -203,12 +224,22 @@ def main():
         folder.mkdir(parents=True, exist_ok=True)
         file_path = folder / f"{safe_filename(slug)}.{ext}"
 
+        new_content = (
+            f"// LeetCode: {sub.get('title')} ({slug})\n"
+            f"// Submission ID: {sub.get('id')}\n"
+            f"// Language: {lang}\n"
+            f"// Timestamp (UTC): {iso}\n\n"
+            f"{code}"
+        )
+
+        # if identical, skip commit (idempotent)
+        if file_exists_and_same(file_path, new_content):
+            # no change
+            continue
+
+        # write and commit (backdated)
         with open(file_path, "w", encoding="utf-8") as f:
-            f.write(f"// LeetCode: {sub.get('title')} ({slug})\n")
-            f.write(f"// Submission ID: {sub.get('id')}\n")
-            f.write(f"// Language: {lang}\n")
-            f.write(f"// Timestamp (UTC): {iso}\n\n")
-            f.write(code)
+            f.write(new_content)
 
         run_git(["add", str(file_path)])
         commit_msg = f"Latest LeetCode: {sub.get('title')} ({slug}) — solved on {iso}"
@@ -222,7 +253,7 @@ def main():
         run_git(["push", "origin", BRANCH])
         print("Push successful.")
     else:
-        print("No new commits.")
+        print("No new commits — all up to date.")
 
 if __name__ == "__main__":
     main()
