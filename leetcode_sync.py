@@ -1,16 +1,20 @@
 #!/usr/bin/env python3
 """
-leetcode_sync.py (one big commit, overwrite-safe)
-- Fetches latest accepted submission per problem from LeetCode
-- Stores each in its own folder (e.g. two-sum/two-sum.java)
-- Overwrites existing files on re-runs
-- Creates ONE commit if something actually changed
+leetcode_sync.py (latest-only, backdated commits, per-problem folders)
+
+- Fetches all submissions via LeetCode GraphQL
+- Keeps only latest accepted submission per problem
+- Each problem stored in its own folder (e.g. two-sum/two-sum.java)
+- One commit per problem, backdated to original solve time
 """
 
-import os, sys, time, requests, subprocess, hashlib
+import os, sys, time, requests, subprocess
 from pathlib import Path
+from datetime import datetime, timezone
 
-LEETCODE_SESSION = os.environ.get("LEETCODE_SESSION")
+# -------------------- Config --------------------
+
+LEETCODE_SESSION = os.environ.get("LEETCODE_SESSION")  # required
 REPO_PATH = Path(os.environ.get("REPO_PATH", os.getcwd()))
 BRANCH = os.environ.get("BRANCH", "main")
 
@@ -26,17 +30,20 @@ EXT_MAP = {
     "cpp":"cpp","c++":"cpp","java":"java","python":"py","python3":"py",
     "c":"c","c#":"cs","csharp":"cs","javascript":"js","ruby":"rb",
     "swift":"swift","go":"go","rust":"rs","kotlin":"kt","scala":"scala",
-    "php":"php",
+    "php":"php","typescript":"ts"
 }
 
 session = requests.Session()
 session.cookies.set("LEETCODE_SESSION", LEETCODE_SESSION, domain=".leetcode.com")
 session.headers.update({"User-Agent":"leetcode-sync-script/1.0","Referer":"https://leetcode.com"})
 
-# -------------------- helpers --------------------
+# -------------------- Helpers --------------------
 
-def run_git(args):
-    res = subprocess.run(["git"] + args, cwd=str(REPO_PATH),
+def run_git(args, env=None):
+    env_all = os.environ.copy()
+    if env:
+        env_all.update(env)
+    res = subprocess.run(["git"] + args, cwd=str(REPO_PATH), env=env_all,
                          text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     if res.returncode != 0:
         print("Git error:", res.returncode)
@@ -46,16 +53,6 @@ def run_git(args):
 
 def safe_filename(s):
     return "".join(c if c.isalnum() or c in "-_." else "_" for c in (s or ""))
-
-def file_checksum(path):
-    """Return SHA1 of file contents, or None if not exist"""
-    if not path.exists():
-        return None
-    h = hashlib.sha1()
-    with open(path, "rb") as f:
-        while chunk := f.read(8192):
-            h.update(chunk)
-    return h.hexdigest()
 
 # -------------------- GraphQL --------------------
 
@@ -87,7 +84,7 @@ def graphql_query(query, variables, max_retries=3):
     return None
 
 def fetch_all_submissions(limit=50):
-    """Fetch metadata for ALL submissions."""
+    """Fetch metadata for ALL submissions (lang is a string now)."""
     gql = """
     query submissionList($offset:Int!,$limit:Int!){
       submissionList(offset:$offset,limit:$limit){
@@ -96,7 +93,7 @@ def fetch_all_submissions(limit=50):
           title
           titleSlug
           statusDisplay
-          lang { name }
+          lang
           timestamp
         }
         hasNext
@@ -112,11 +109,7 @@ def fetch_all_submissions(limit=50):
         data = body.get("data", {}).get("submissionList", {})
         batch = data.get("submissions") or []
         for item in batch:
-            lang_obj = item.get("lang")
-            if isinstance(lang_obj, dict):
-                item["lang_name"] = lang_obj.get("name") or ""
-            else:
-                item["lang_name"] = str(lang_obj or "")
+            item["lang_name"] = item.get("lang") or ""
         subs.extend(batch)
         print(f"GraphQL: offset={offset}, got {len(batch)} submissions")
         if not data.get("hasNext") or len(batch) < limit:
@@ -147,7 +140,7 @@ def fetch_submission_code(sub_id):
         return None
     return body.get("data", {}).get("submissionDetails", {})
 
-# -------------------- main --------------------
+# -------------------- Main --------------------
 
 def main():
     print("Fetching metadata...")
@@ -169,42 +162,48 @@ def main():
 
     print("Problems solved:", len(latest))
 
-    changed = 0
+    created = 0
     for slug, sub in latest.items():
         details = fetch_submission_code(sub.get("id"))
         if not details or not details.get("code"):
             print("No code for", slug)
             continue
+
         code = details["code"]
         lang = (details.get("lang") or sub.get("lang_name") or "").lower()
         ext = EXT_MAP.get(lang, "txt")
+        ts = int(details.get("timestamp") or sub.get("timestamp") or 0)
+
+        if not ts:
+            continue
+
+        dt = datetime.fromtimestamp(ts, tz=timezone.utc)
+        iso = dt.strftime("%Y-%m-%dT%H:%M:%SZ")
 
         folder = REPO_PATH / safe_filename(slug)
         folder.mkdir(parents=True, exist_ok=True)
         file_path = folder / f"{safe_filename(slug)}.{ext}"
 
-        new_content = (
-            f"// LeetCode: {sub.get('title')} ({slug})\n"
-            f"// Submission ID: {sub.get('id')}\n"
-            f"// Language: {lang}\n\n"
-            f"{code}"
-        )
+        with open(file_path, "w", encoding="utf-8") as f:
+            f.write(f"// LeetCode: {sub.get('title')} ({slug})\n")
+            f.write(f"// Submission ID: {sub.get('id')}\n")
+            f.write(f"// Language: {lang}\n")
+            f.write(f"// Timestamp (UTC): {iso}\n\n")
+            f.write(code)
 
-        old_hash = file_checksum(file_path)
-        new_hash = hashlib.sha1(new_content.encode("utf-8")).hexdigest()
+        run_git(["add", str(file_path)])
+        commit_msg = f"Latest LeetCode: {sub.get('title')} ({slug}) — solved on {iso}"
+        env = {"GIT_AUTHOR_DATE": iso, "GIT_COMMITTER_DATE": iso}
+        run_git(["commit", "-m", commit_msg], env=env)
+        print("Committed", slug, "at", iso)
+        created += 1
 
-        if old_hash != new_hash:
-            with open(file_path, "w", encoding="utf-8") as f:
-                f.write(new_content)
-            run_git(["add", str(file_path)])
-            changed += 1
-
-    if changed > 0:
-        run_git(["commit", "-m", f"Sync latest accepted LeetCode solutions ({changed} updated)"])
+    print("Created commits:", created)
+    if created > 0:
         run_git(["push", "origin", BRANCH])
-        print("Committed & pushed", changed, "solutions in one commit.")
+        print("Push successful.")
     else:
-        print("No changes to commit — repo already up to date.")
+        print("No new commits.")
 
 if __name__ == "__main__":
     main()
