@@ -37,7 +37,7 @@ jobs:
           LEETCODE_SESSION: ${{ secrets.LEETCODE_SESSION }}
           AUTHOR_NAME: ${{ github.actor }}
           AUTHOR_EMAIL: ${{ secrets.MY_GH_EMAIL }}   # must be your verified GitHub email
-          FORCE_RECOMMIT: "1"                        # first run: backfill everything
+          FORCE_RECOMMIT: "0"                        # first run: backfill everything
           PLACEHOLDER_ON_MISSING: "1"                # enable placeholders for missing code
           PLACEHOLDER_EXT: "md"                      # placeholder file extension
           REPO_PATH: ${{ github.workspace }}
